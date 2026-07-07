@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おにぎり処方箋 🍙</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rice: #FAF5EA;
+    --rice-deep: #F1E9D6;
+    --nori: #262D22;
+    --nori-soft: #3C4536;
+    --ume: #D9455F;
+    --shake: #EF8A5F;
+    --shiso: #5F7F52;
+    --tamago: #EFB63C;
+    --ink-sub: #6E7365;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+    background: var(--rice);
+    color: var(--nori);
+    min-height: 100vh;
+    background-image: radial-gradient(var(--rice-deep) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 28px 18px 80px; }
+
+  /* ===== ヘッダー ===== */
+  header { text-align: center; margin-bottom: 26px; }
+  .kanban {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: var(--nori); color: var(--rice);
+    padding: 12px 26px; border-radius: 999px;
+    box-shadow: 0 4px 0 rgba(38,45,34,.25);
+  }
+  .kanban h1 { font-size: 1.45rem; font-weight: 900; letter-spacing: .08em; }
+  .kanban .oni { font-size: 1.6rem; animation: sway 3s ease-in-out infinite; display:inline-block; }
+  @keyframes sway { 0%,100%{ transform: rotate(-6deg);} 50%{ transform: rotate(6deg);} }
+  header p { margin-top: 12px; color: var(--ink-sub); font-size: .92rem; font-weight: 700; }
+
+  /* ===== 問診カード ===== */
+  .card {
+    background: #fff; border: 2px solid var(--nori);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 18px;
+    box-shadow: 5px 5px 0 rgba(38,45,34,.12);
+  }
+  .q-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+  .q-label .badge {
+    background: var(--ume); color: #fff; font-weight: 900;
+    border-radius: 8px; padding: 2px 10px; font-size: .8rem; flex-shrink: 0;
+  }
+  .q-label h2 { font-size: 1.05rem; font-weight: 900; }
+  .opts { display: flex; flex-wrap: wrap; gap: 9px; }
+  .opt {
+    border: 2px solid var(--nori-soft); background: var(--rice);
+    border-radius: 999px; padding: 9px 16px;
+    font-family: inherit; font-weight: 700; font-size: .92rem; color: var(--nori);
+    cursor: pointer; transition: transform .12s, background .12s, color .12s;
+  }
+  .opt:hover { transform: translateY(-2px); }
+  .opt:focus-visible { outline: 3px solid var(--tamago); outline-offset: 2px; }
+  .opt.on { background: var(--nori); color: var(--rice); border-color: var(--nori); }
+
+  /* ===== 面白レシピトグル ===== */
+  .joke-card { border-style: dashed; }
+  .joke-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .joke-row .txt h2 { font-size: 1.05rem; font-weight: 900; }
+  .joke-row .txt p { color: var(--ink-sub); font-size: .84rem; margin-top: 4px; font-weight: 700; }
+  .switch { display: flex; border: 2px solid var(--nori); border-radius: 999px; overflow: hidden; }
+  .switch button {
+    font-family: inherit; font-weight: 900; font-size: .88rem;
+    padding: 9px 16px; border: none; background: #fff; color: var(--nori); cursor: pointer;
+  }
+  .switch button.on { background: var(--tamago); }
+  .switch button:focus-visible { outline: 3px solid var(--ume); outline-offset: -3px; }
+
+  /* ===== にぎるボタン ===== */
+  .nigiru {
+    display: block; width: 100%; margin-top: 6px;
+    background: var(--ume); color: #fff; border: 2px solid var(--nori);
+    border-radius: var(--radius); padding: 16px;
+    font-family: inherit; font-size: 1.15rem; font-weight: 900; letter-spacing: .1em;
+    cursor: pointer; box-shadow: 5px 5px 0 rgba(38,45,34,.2);
+    transition: transform .12s, box-shadow .12s;
+  }
+  .nigiru:hover { transform: translate(2px,2px); box-shadow: 3px 3px 0 rgba(38,45,34,.2); }
+  .nigiru:active { transform: translate(5px,5px); box-shadow: none; }
+  .nigiru:focus-visible { outline: 3px solid var(--tamago); outline-offset: 3px; }
+  .nigiru:disabled { background: #C9C3B4; cursor: not-allowed; }
+
+  /* ===== 結果 ===== */
+  #result { margin-top: 34px; }
+  .result-head { text-align: center; margin-bottom: 18px; }
+  .result-head h2 {
+    display: inline-block; font-size: 1.2rem; font-weight: 900;
+    border-bottom: 4px solid var(--tamago); padding-bottom: 4px;
+  }
+  .recipe {
+    background: #fff; border: 2px solid var(--nori); border-radius: var(--radius);
+    padding: 22px; margin-bottom: 16px; box-shadow: 5px 5px 0 rgba(38,45,34,.12);
+    display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: start;
+    animation: pop .35s ease both;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.97);} to { opacity: 1; transform: none;} }
+  .recipe:nth-child(2){ animation-delay:.08s } .recipe:nth-child(3){ animation-delay:.16s } .recipe:nth-child(4){ animation-delay:.24s }
+  .recipe.joke { border-color: var(--ume); border-style: dashed; background: #FFF4F0; }
+  .oni-svg { width: 120px; height: 120px; }
+  .r-body h3 { font-size: 1.15rem; font-weight: 900; margin-bottom: 2px; }
+  .r-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; }
+  .tag {
+    font-size: .72rem; font-weight: 900; padding: 3px 9px; border-radius: 999px;
+    background: var(--rice-deep); color: var(--nori-soft);
+  }
+  .tag.warn { background: var(--ume); color: #fff; }
+  .r-body .desc { font-size: .9rem; line-height: 1.7; }
+  .r-body .ing { margin-top: 10px; font-size: .86rem; background: var(--rice); border-radius: 10px; padding: 10px 12px; }
+  .r-body .ing strong { font-size: .78rem; color: var(--ink-sub); display: block; margin-bottom: 3px; }
+  .r-body .howto { margin-top: 8px; font-size: .86rem; color: var(--nori-soft); line-height: 1.7; }
+  .caution { margin-top: 8px; font-size: .78rem; color: var(--ume); font-weight: 700; }
+  .again {
+    display: block; width: 100%; margin: 10px 0 20px;
+    background: var(--shiso); color: #fff; border: 2px solid var(--nori);
+    border-radius: var(--radius); padding: 15px;
+    font-family: inherit; font-size: 1.1rem; font-weight: 900; letter-spacing: .08em;
+    cursor: pointer; box-shadow: 5px 5px 0 rgba(38,45,34,.2);
+    transition: transform .12s, box-shadow .12s;
+  }
+  .again:hover { transform: translate(2px,2px); box-shadow: 3px 3px 0 rgba(38,45,34,.2); }
+  .again:active { transform: translate(5px,5px); box-shadow: none; }
+  .again:focus-visible { outline: 3px solid var(--tamago); outline-offset: 3px; }
+  .empty { text-align: center; color: var(--ink-sub); font-weight: 700; padding: 20px; }
+
+  /* ===== シェア ===== */
+  .r-share { margin-top: 12px; }
+  .share-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: inherit; font-weight: 900; font-size: .8rem;
+    background: #fff; color: var(--nori); border: 2px solid var(--nori);
+    border-radius: 999px; padding: 6px 14px; cursor: pointer; margin-right: 8px;
+    transition: transform .12s;
+  }
+  .share-btn:hover { transform: translateY(-2px); }
+  .share-btn:focus-visible { outline: 3px solid var(--tamago); outline-offset: 2px; }
+  .share-btn.x { background: var(--nori); color: var(--rice); }
+  .share-bar {
+    display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 18px;
+  }
+  .share-bar .share-btn { font-size: .92rem; padding: 10px 20px; box-shadow: 3px 3px 0 rgba(38,45,34,.15); margin-right: 0; }
+  #toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
+    background: var(--nori); color: var(--rice); font-weight: 900; font-size: .88rem;
+    padding: 12px 22px; border-radius: 999px; opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s; z-index: 50;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 520px) {
+    .recipe { grid-template-columns: 1fr; }
+    .oni-svg { margin: 0 auto; display: block; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kanban .oni, .recipe { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kanban"><span class="oni">🍙</span><h1>おにぎり処方箋</h1></div>
+    <p>今日の気分を教えてください。ぴったりの一品をおにぎり薬局が調合します。</p>
+  </header>
+
+  <section class="card">
+    <div class="q-label"><span class="badge">問1</span><h2>今日の気分は?</h2></div>
+    <div class="opts" id="q-mood" role="group" aria-label="今日の気分"></div>
+  </section>
+
+  <section class="card">
+    <div class="q-label"><span class="badge">問2</span><h2>食べたい味は?</h2></div>
+    <div class="opts" id="q-taste" role="group" aria-label="食べたい味"></div>
+  </section>
+
+  <section class="card">
+    <div class="q-label"><span class="badge">問3</span><h2>欲しい栄養は?</h2></div>
+    <div class="opts" id="q-nutri" role="group" aria-label="欲しい栄養"></div>
+  </section>
+
+  <section class="card joke-card">
+    <div class="joke-row">
+      <div class="txt">
+        <h2>🧪 面白レシピの混入</h2>
+        <p>サプリ・ゲテモノ入りの「攻めレシピ」を処方に混ぜますか?</p>
+      </div>
+      <div class="switch" role="group" aria-label="面白レシピの混入">
+        <button id="joke-on" class="on" aria-pressed="true">混ぜてOK</button>
+        <button id="joke-off" aria-pressed="false">まじめ一択</button>
+      </div>
+    </div>
+  </section>
+
+  <button class="nigiru" id="go">にぎる 🍙</button>
+
+  <section id="result" aria-live="polite"></section>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+// ===== 選択肢 =====
+const MOODS  = [
+  {id:"genki",  label:"元気を出したい"},
+  {id:"tsukare",label:"疲れた…癒されたい"},
+  {id:"sappari",label:"さっぱりしたい"},
+  {id:"gattsuri",label:"がっつりいきたい"},
+  {id:"bouken", label:"冒険したい"},
+];
+const TASTES = [
+  {id:"shio",   label:"しょっぱい系"},
+  {id:"umami",  label:"うまみ・だし系"},
+  {id:"karai",  label:"ピリ辛"},
+  {id:"suppai", label:"酸味"},
+  {id:"kotteri",label:"こってり"},
+];
+const NUTRIS = [
+  {id:"protein",label:"タンパク質"},
+  {id:"fiber",  label:"食物繊維"},
+  {id:"vitamin",label:"ビタミン・ミネラル"},
+  {id:"energy", label:"エネルギー補給"},
+  {id:"free",   label:"特にこだわらない"},
+];
+
+// ===== レシピDB =====
+// mood/taste/nutri: マッチするIDの配列 / joke: 面白レシピか / color: 具の色
+const RECIPES = [
+  // ---- まじめ ----
+  {name:"鮭マヨ黒ごまむすび", joke:false, color:"#EF8A5F",
+   mood:["genki","gattsuri"], taste:["kotteri","shio"], nutri:["protein","energy"],
+   desc:"焼き鮭×マヨの鉄板コンビに黒ごまの香ばしさをプラス。午後のやる気をチャージする王道の一品。",
+   ing:"温かいごはん、焼き鮭(ほぐし)、マヨネーズ、黒いりごま、塩、焼き海苔",
+   how:"鮭とマヨ・ごまを和えて具に。塩をつけた手でふんわりにぎり、海苔を巻く。"},
+  {name:"梅しそ疲労回復むすび", joke:false, color:"#D9455F",
+   mood:["tsukare","sappari"], taste:["suppai","shio"], nutri:["vitamin","free"],
+   desc:"梅干しのクエン酸としその香りで、疲れた体をやさしくリセット。食欲がない日にもするっと入る。",
+   ing:"温かいごはん、梅干し、大葉(千切り)、白いりごま、塩",
+   how:"叩いた梅と大葉・ごまをごはんに混ぜ込んでにぎる。冷めてもおいしい。"},
+  {name:"枝豆塩昆布チーズむすび", joke:false, color:"#5F7F52",
+   mood:["genki","tsukare"], taste:["umami","shio"], nutri:["protein","fiber"],
+   desc:"枝豆のタンパク質と塩昆布のうまみ、角切りチーズのコクが三位一体。彩りもかわいい万能選手。",
+   ing:"温かいごはん、むき枝豆、塩昆布、プロセスチーズ(角切り)",
+   how:"全部混ぜてにぎるだけ。チーズは小さめに切ると崩れにくい。"},
+  {name:"明太クリチのこってりむすび", joke:false, color:"#E76A8A",
+   mood:["gattsuri","genki"], taste:["karai","kotteri"], nutri:["protein","energy"],
+   desc:"明太子のピリ辛をクリームチーズがまろやかに包む、背徳感のあるごちそうおにぎり。",
+   ing:"温かいごはん、辛子明太子、クリームチーズ、刻み海苔",
+   how:"明太子とクリームチーズをざっくり和えて具に。仕上げに刻み海苔を。"},
+  {name:"玄米おかかごぼうむすび", joke:false, color:"#8A6B3F",
+   mood:["sappari","tsukare"], taste:["umami","shio"], nutri:["fiber","vitamin"],
+   desc:"玄米ときんぴらごぼうで食物繊維をしっかり確保。噛むほどにだしの香りが広がる滋味系。",
+   ing:"炊いた玄米、きんぴらごぼう、かつお節、しょうゆ少々",
+   how:"きんぴらを刻んで玄米に混ぜ、おかか醤油を加えてにぎる。"},
+  {name:"鶏そぼろ生姜むすび", joke:false, color:"#C97B3D",
+   mood:["genki","tsukare"], taste:["umami","kotteri"], nutri:["protein","energy"],
+   desc:"甘辛そぼろに生姜をきかせて、体の中からぽかぽか。冷えた日やがんばりたい朝に。",
+   ing:"温かいごはん、鶏ひき肉、生姜(みじん)、しょうゆ、みりん、砂糖",
+   how:"生姜と調味料でそぼろを炒め、ごはんに混ぜてにぎる。"},
+  {name:"悪魔の天かす青のりむすび", joke:false, color:"#EFB63C",
+   mood:["gattsuri","genki"], taste:["kotteri","umami"], nutri:["energy","free"],
+   desc:"天かす×めんつゆ×青のりの中毒性。カロリーは正義、と言い切りたい日のための一品。",
+   ing:"温かいごはん、天かす、めんつゆ、青のり",
+   how:"全部混ぜてにぎるだけ。天かすは直前に混ぜるとサクサク感が残る。"},
+  {name:"しらすごま塩カルシウムむすび", joke:false, color:"#B9C4CC",
+   mood:["sappari","tsukare"], taste:["shio","umami"], nutri:["vitamin","protein"],
+   desc:"しらすとごまでカルシウムとミネラルを手軽に。やさしい塩気でいくらでも食べられる。",
+   ing:"温かいごはん、釜揚げしらす、白いりごま、塩、大葉(あれば)",
+   how:"しらすとごまを混ぜ込み、塩でにぎる。大葉で巻くと風味アップ。"},
+  {name:"焼き味噌ねぎむすび", joke:false, color:"#A5652F",
+   mood:["tsukare","gattsuri"], taste:["umami","kotteri"], nutri:["energy","free"],
+   desc:"味噌の焦げる香りは日本人の魂に直接届く。トースターで焼くだけの香ばし系。",
+   ing:"温かいごはん、味噌、みりん、小ねぎ、ごま油少々",
+   how:"かためににぎり、味噌だれを塗ってトースターで焼き色がつくまで。"},
+  {name:"キムチツナマヨむすび", joke:false, color:"#D9455F",
+   mood:["genki","gattsuri","bouken"], taste:["karai","kotteri"], nutri:["protein","energy"],
+   desc:"ピリ辛キムチとツナマヨの相性は反則級。発酵パワーで元気もチャージ。",
+   ing:"温かいごはん、キムチ(刻み)、ツナ缶、マヨネーズ、ごま油",
+   how:"キムチの汁気を切ってツナマヨと和え、具にしてにぎる。"},
+  {name:"卵黄しょうゆ漬けむすび", joke:false, color:"#EFB63C",
+   mood:["gattsuri","bouken"], taste:["umami","kotteri"], nutri:["protein","energy"],
+   desc:"ひと晩漬けたとろとろ卵黄を米で包む、割ると黄金があふれる背徳の一撃。",
+   ing:"温かいごはん、卵黄(しょうゆ+みりんに半日漬け)、刻み海苔",
+   how:"ごはんの中央にくぼみを作り卵黄をイン。崩れやすいのでやさしくにぎる。",
+   caution:"生卵黄を使うため新鮮な卵で。作ったら早めに食べてください。"},
+  {name:"わかめじゃこ酢飯むすび", joke:false, color:"#3E7061",
+   mood:["sappari"], taste:["suppai","shio"], nutri:["vitamin","fiber"],
+   desc:"ほんのり酢飯にわかめとじゃこ。ミネラル補給しながら口の中はさっぱり爽快。",
+   ing:"温かいごはん、すし酢少々、乾燥わかめ(戻す)、ちりめんじゃこ、白ごま",
+   how:"すし酢を軽く混ぜたごはんに具材を混ぜ込んでにぎる。"},
+
+  {name:"おかか醤油バターむすび", joke:false, color:"#B08A4F",
+   mood:["gattsuri","tsukare"], taste:["kotteri","umami"], nutri:["energy","free"],
+   desc:"おかか醤油に溶かしバターを忍ばせた反則の香り。冷めてもバターのコクがじんわり続く。",
+   ing:"温かいごはん、かつお節、しょうゆ、バター10g、黒こしょう少々",
+   how:"温かいごはんにバターを溶かし混ぜ、おかか醤油を加えてにぎる。"},
+  {name:"焼きとうもろこしバター醤油むすび", joke:false, color:"#EFD03C",
+   mood:["genki","gattsuri"], taste:["kotteri","umami"], nutri:["energy","fiber"],
+   desc:"屋台の焼きとうもろこしをおにぎりに閉じ込めた夏の味。プチプチ食感で気分が上がる。",
+   ing:"温かいごはん、コーン、バター、しょうゆ、黒こしょう",
+   how:"コーンをバター醤油で炒めてから混ぜ込むと香ばしさが段違い。"},
+  {name:"塩麹鶏ハムむすび", joke:false, color:"#E8C9B0",
+   mood:["sappari","genki"], taste:["shio","umami"], nutri:["protein"],
+   desc:"塩麹でしっとり仕上げた鶏ハムを具に。高タンパク低脂質、罪悪感ゼロのトレーニー飯。",
+   ing:"温かいごはん、鶏むね肉(塩麹漬けをレンジ加熱)、大葉、塩",
+   how:"鶏ハムを裂いて大葉と一緒に具にする。ゆず胡椒を少し足しても◎。"},
+  {name:"ひじき煮の栄養貯金むすび", joke:false, color:"#4A4238",
+   mood:["tsukare","sappari"], taste:["umami"], nutri:["fiber","vitamin"],
+   desc:"ひじきと大豆の煮物を混ぜ込んだ、食物繊維と鉄分の貯金箱。お弁当の定番力は伊達じゃない。",
+   ing:"温かいごはん、ひじきの煮物(にんじん・大豆入り)、白ごま",
+   how:"煮物の汁気を切って混ぜ込む。多めに作って冷凍ストックも便利。"},
+  {name:"スパイシーカレーチーズむすび", joke:false, color:"#D98A2B",
+   mood:["genki","gattsuri"], taste:["karai","kotteri"], nutri:["energy"],
+   desc:"カレー粉の香りにとろけるチーズ。子どもも大人も無条件で手が伸びるスパイス枠。",
+   ing:"温かいごはん、カレー粉、プロセスチーズ、コンソメ少々、パセリ",
+   how:"カレー粉とコンソメを混ぜたごはんでチーズを包んでにぎる。焼きおにぎりにしても美味。"},
+  {name:"大葉味噌くるみむすび", joke:false, color:"#7A5C3E",
+   mood:["tsukare","sappari"], taste:["umami","kotteri"], nutri:["vitamin","fiber"],
+   desc:"甘辛い大葉味噌にくるみの食感。香りとコクで疲れた心をほどく、田舎のおばあちゃんの味。",
+   ing:"温かいごはん、味噌、砂糖、大葉(刻み)、くるみ(砕く)",
+   how:"味噌と砂糖を練って大葉・くるみと混ぜ、具または表面に塗って焼く。"},
+  {name:"たくあんごま油ポリポリむすび", joke:false, color:"#E8C33C",
+   mood:["sappari"], taste:["shio","suppai"], nutri:["fiber","free"],
+   desc:"刻みたくあん×ごま油×白ごま。ポリポリ食感が楽しくて、気づけば2個目に手が伸びる。",
+   ing:"温かいごはん、たくあん(粗みじん)、ごま油、白いりごま、韓国のり(あれば)",
+   how:"全部混ぜてにぎるだけ。韓国のりで巻くと止まらなくなる。"},
+  {name:"塩レモンチキンむすび", joke:false, color:"#E8DC5C",
+   mood:["sappari","genki"], taste:["suppai","shio"], nutri:["protein","vitamin"],
+   desc:"レモンの酸味と鶏むねのうまみが夏バテ気味の体にしみる。爽やか系タンパク質チャージ。",
+   ing:"温かいごはん、蒸し鶏、レモン汁、レモンの皮少々、塩、黒こしょう",
+   how:"蒸し鶏をレモン汁・塩こしょうで和えて混ぜ込む。皮のすりおろしで香りアップ。"},
+  {name:"とろろ昆布おぼろむすび", joke:false, color:"#9FA65C",
+   mood:["tsukare","sappari"], taste:["umami","suppai"], nutri:["fiber","vitamin"],
+   desc:"海苔の代わりにとろろ昆布をまとわせた、ふわふわ酸味系。だしの香りに包まれて癒される。",
+   ing:"温かいごはん、とろろ昆布、梅干し(またはおかか)、しょうゆ少々",
+   how:"梅やおかかを具ににぎり、全体にとろろ昆布をまとわせる。"},
+  {name:"スパムたまご沖縄むすび", joke:false, color:"#E07A6A",
+   mood:["gattsuri","genki"], taste:["kotteri","shio"], nutri:["protein","energy"],
+   desc:"焼いたスパムと厚焼き卵を海苔でがっちりホールド。片手で食べられる沖縄のソウルフード。",
+   ing:"ごはん、スパム(焼く)、卵焼き、焼き海苔、塩",
+   how:"俵型のごはんにスパムと卵をのせ、海苔で帯状に巻く。ラップで成形すると簡単。"},
+  {name:"桜えびねぎ塩ごま油むすび", joke:false, color:"#F2A08A",
+   mood:["genki","sappari"], taste:["shio","umami"], nutri:["vitamin","protein"],
+   desc:"香ばしい桜えびでカルシウム補給。ねぎ塩ごま油の風味で、シンプルなのに手が止まらない。",
+   ing:"温かいごはん、素干し桜えび、小ねぎ、ごま油、塩",
+   how:"桜えびを乾煎りしてから混ぜると香りが立つ。仕上げにごま油をひと垂らし。"},
+  {name:"もち麦鮭ハラスむすび", joke:false, color:"#EF8A5F",
+   mood:["gattsuri","tsukare"], taste:["kotteri","umami"], nutri:["fiber","protein"],
+   desc:"プチプチもち麦ごはんに脂ののった鮭ハラス。こってり欲と食物繊維を同時に満たす欲張り設計。",
+   ing:"もち麦入りごはん、鮭ハラス(焼く)、白ごま、塩",
+   how:"焼いたハラスをほぐして混ぜ込み、塩でにぎる。皮も香ばしく焼いて一緒に。"},
+
+  {name:"ツナマヨ王道むすび", joke:false, color:"#E8DFC9", mood:["genki","gattsuri"], taste:["kotteri","shio"], nutri:["protein","energy"],
+   desc:"コンビニおにぎり売上の絶対王者を自宅で。マヨは少し多めが背徳的でおいしい。",
+   ing:"温かいごはん、ツナ缶、マヨネーズ、しょうゆ少々、焼き海苔",
+   how:"油を切ったツナをマヨ醤油で和えて具にする。"},
+  {name:"おかか醤油しみしみむすび", joke:false, color:"#8A6B3F", mood:["tsukare","sappari"], taste:["umami","shio"], nutri:["free"],
+   desc:"かつお節に醤油をまわしかけただけの原点にして頂点。だしの香りが心をほどく。",
+   ing:"温かいごはん、かつお節、しょうゆ、白ごま",
+   how:"おかかに醤油をなじませてから混ぜ込むとムラなくしみる。"},
+  {name:"昆布佃煮のしみじみむすび", joke:false, color:"#3F4A3A", mood:["tsukare"], taste:["umami"], nutri:["fiber"],
+   desc:"甘辛い昆布佃煮は白米の永遠の相棒。じんわりしたい日の安定株。",
+   ing:"温かいごはん、昆布の佃煮、白ごま、焼き海苔",
+   how:"佃煮を中央に入れてにぎる。刻んで混ぜ込んでも。"},
+  {name:"焼きたらこほくほくむすび", joke:false, color:"#E88A8A", mood:["genki"], taste:["shio","umami"], nutri:["protein"],
+   desc:"こんがり焼いたたらこのほろほろ食感。プチプチの塩気がごはんを進ませる。",
+   ing:"温かいごはん、たらこ(焼く)、大葉、焼き海苔",
+   how:"焼いたたらこを大きめに割って具にする。"},
+  {name:"生明太どっさりむすび", joke:false, color:"#E05A6A", mood:["gattsuri","genki"], taste:["karai","shio"], nutri:["protein"],
+   desc:"あえて何も足さない生明太一本勝負。ピリ辛とうまみの直球ストレート。",
+   ing:"温かいごはん、辛子明太子、焼き海苔",
+   how:"明太子をたっぷり中央に。皮ごと入れるのが通。"},
+  {name:"すじこの贅沢むすび", joke:false, color:"#E0603F", mood:["gattsuri"], taste:["shio","umami"], nutri:["protein"],
+   desc:"ねっとり濃厚なすじこの塩気は米との相性が異次元。ごほうび系の代表格。",
+   ing:"温かいごはん、すじこ、焼き海苔",
+   how:"すじこは崩さず大きめのまま中央に入れる。"},
+  {name:"いくら醤油の宝石むすび", joke:false, color:"#E8703F", mood:["genki","gattsuri"], taste:["umami","shio"], nutri:["protein"],
+   desc:"割るとオレンジの宝石がこぼれる小さな贅沢。がんばった日の自分へ。",
+   ing:"温かいごはん、いくら醤油漬け、焼き海苔",
+   how:"ごはんのくぼみにいくらを入れ、つぶさないようやさしくにぎる。"},
+  {name:"ゆかりちりめん爽やかむすび", joke:false, color:"#B05A8A", mood:["sappari"], taste:["suppai","shio"], nutri:["vitamin"],
+   desc:"赤しそのゆかりとちりめんじゃこの塩気。ほのかな酸味で口の中が涼しくなる。",
+   ing:"温かいごはん、ゆかり、ちりめんじゃこ、白ごま",
+   how:"全部混ぜてにぎるだけ。大葉を巻くとさらに爽やか。"},
+  {name:"わかめごはんの給食むすび", joke:false, color:"#4A7A5F", mood:["sappari","tsukare"], taste:["shio","umami"], nutri:["vitamin","fiber"],
+   desc:"給食で一番人気だったあの味を再現。ごま油をひと垂らしすると大人の味に。",
+   ing:"温かいごはん、乾燥わかめ(戻して刻む)、塩、ごま油、白ごま",
+   how:"わかめの水気をしっかり切って混ぜ込むのがコツ。"},
+  {name:"天むす名古屋魂むすび", joke:false, color:"#E8A05F", mood:["gattsuri","genki"], taste:["umami","kotteri"], nutri:["protein","energy"],
+   desc:"えび天がちょこんと顔を出す名古屋名物。天つゆをくぐらせた衣が米にしみる。",
+   ing:"ごはん、えびの天ぷら(小)、天つゆ、焼き海苔",
+   how:"天つゆにさっとくぐらせたえび天を中央に立ててにぎる。"},
+  {name:"肉巻きおにぎり宮崎風", joke:false, color:"#A8503A", mood:["gattsuri"], taste:["kotteri","umami"], nutri:["protein","energy"],
+   desc:"甘辛だれの豚バラで米を丸ごと包む肉の要塞。冷めてもおいしい最強弁当枠。",
+   ing:"ごはん、豚バラ薄切り、焼肉のたれ、白ごま",
+   how:"俵型のごはんに豚バラを巻き、たれを絡めながら焼く。"},
+  {name:"香ばし醤油の焼きむすび", joke:false, color:"#B07A3F", mood:["tsukare","gattsuri"], taste:["umami","shio"], nutri:["energy"],
+   desc:"表面カリッ、中はふっくら。醤油の焦げる香りは万国共通の幸福信号。",
+   ing:"ごはん、しょうゆ、みりん、ごま油少々",
+   how:"かためににぎってから、たれを2〜3回塗り重ねて焼く。"},
+  {name:"野沢菜わさびむすび", joke:false, color:"#5F8A4F", mood:["sappari"], taste:["shio","karai"], nutri:["fiber","vitamin"],
+   desc:"シャキシャキ野沢菜にわさびのキレ。信州の風が吹き抜けるさっぱり系。",
+   ing:"温かいごはん、野沢菜漬け(刻む)、わさび、白ごま",
+   how:"野沢菜の水気を絞り、わさびと一緒に混ぜ込む。"},
+  {name:"高菜炒めのピリ辛むすび", joke:false, color:"#4F7A3F", mood:["genki","gattsuri"], taste:["shio","karai"], nutri:["fiber"],
+   desc:"ごま油で炒めた高菜と唐辛子の香り。九州のラーメン屋の名脇役を主役に。",
+   ing:"温かいごはん、高菜漬け、ごま油、唐辛子、白ごま",
+   how:"高菜を炒めて水分を飛ばしてから混ぜ込む。"},
+  {name:"青菜じゃこの菜飯むすび", joke:false, color:"#5F8A5F", mood:["sappari","tsukare"], taste:["shio","umami"], nutri:["vitamin"],
+   desc:"塩もみ青菜とじゃこの素朴な菜飯。やさしい塩気に肩の力が抜ける。",
+   ing:"温かいごはん、かぶや大根の葉(塩もみ)、ちりめんじゃこ、白ごま",
+   how:"青菜の水気をよく絞って混ぜ込む。"},
+  {name:"山椒ちりめんしびれむすび", joke:false, color:"#9FA05F", mood:["sappari","bouken"], taste:["shio","karai"], nutri:["vitamin"],
+   desc:"実山椒のさわやかな痺れとじゃこのうまみ。京都土産の味を毎日の一品に。",
+   ing:"温かいごはん、ちりめん山椒、白ごま",
+   how:"混ぜてにぎるだけ。山椒好きは実山椒を追いがけ。"},
+  {name:"あさり佃煮と生姜のむすび", joke:false, color:"#6B5A4A", mood:["tsukare"], taste:["umami"], nutri:["vitamin"],
+   desc:"あさりの濃いうまみと生姜の香り。鉄分がうれしい、働く人の味方。",
+   ing:"温かいごはん、あさりの佃煮、生姜(千切り)、白ごま",
+   how:"佃煮と生姜を混ぜ込んでにぎる。"},
+  {name:"鮭いくら親子むすび", joke:false, color:"#EF7A4F", mood:["gattsuri","genki"], taste:["umami","shio"], nutri:["protein"],
+   desc:"焼き鮭といくらの親子共演。北の海の豪華リレーを一個に凝縮。",
+   ing:"温かいごはん、焼き鮭(ほぐし)、いくら醤油漬け、焼き海苔",
+   how:"鮭を混ぜ込み、中央にいくらを忍ばせてにぎる。"},
+  {name:"豚キムチスタミナむすび", joke:false, color:"#D9603F", mood:["genki","gattsuri"], taste:["karai","kotteri"], nutri:["protein"],
+   desc:"炒めた豚キムチを豪快に混ぜ込むスタミナ枠。発酵×肉で元気の前借りを。",
+   ing:"温かいごはん、豚こま、キムチ、ごま油、しょうゆ",
+   how:"豚キムチを炒めて汁気を飛ばしてから混ぜ込む。"},
+  {name:"豚角煮とろとろむすび", joke:false, color:"#8A4A2F", mood:["gattsuri","tsukare"], taste:["kotteri","umami"], nutri:["protein","energy"],
+   desc:"箸で切れる角煮を丸ごと閉じ込めた反則級。煮汁を少し混ぜたごはんが本体という説も。",
+   ing:"ごはん、豚の角煮、煮汁少々、からし(お好み)",
+   how:"煮汁を混ぜたごはんで角煮を包む。大きめの一個で作るのが吉。"},
+  {name:"チャーシューマヨむすび", joke:false, color:"#B06A3F", mood:["gattsuri"], taste:["kotteri"], nutri:["protein","energy"],
+   desc:"ラーメン屋の裏メニュー的存在を自宅で。刻みチャーシュー×マヨは無敵。",
+   ing:"温かいごはん、チャーシュー(刻む)、マヨネーズ、小ねぎ、黒こしょう",
+   how:"具材を和えて混ぜ込むか、中央にたっぷり入れる。"},
+  {name:"牛しぐれ煮生姜むすび", joke:false, color:"#7A4A2F", mood:["tsukare","gattsuri"], taste:["umami","kotteri"], nutri:["protein"],
+   desc:"甘辛い牛肉に生姜がキリッ。冷めてもかたくならない、お弁当の優等生。",
+   ing:"温かいごはん、牛こま、生姜、しょうゆ、みりん、砂糖",
+   how:"甘辛く煮た牛しぐれを混ぜ込んでにぎる。"},
+  {name:"照り焼きチキンむすび", joke:false, color:"#C97A3A", mood:["genki","gattsuri"], taste:["kotteri","umami"], nutri:["protein"],
+   desc:"つやつやの照り焼きだれが米にしみる。老若男女に刺さる鉄板の甘辛。",
+   ing:"ごはん、鶏もも照り焼き(刻む)、マヨ少々、焼き海苔",
+   how:"照り焼きを刻んで具にする。レタスを挟むとサンド風。"},
+  {name:"から揚げマヨ爆弾むすび", joke:false, color:"#C9883F", mood:["gattsuri","genki"], taste:["kotteri"], nutri:["protein","energy"],
+   desc:"から揚げを丸ごと1個埋蔵した満足度の暴力。部活帰りの胃袋に捧ぐ。",
+   ing:"ごはん、から揚げ1個、マヨネーズ、焼き海苔",
+   how:"マヨをまとわせたから揚げを中央に埋めて大きめににぎる。"},
+  {name:"タンドリーチキンむすび", joke:false, color:"#D97A3F", mood:["bouken","genki"], taste:["karai","kotteri"], nutri:["protein"],
+   desc:"スパイスとヨーグルトの香りをまとった鶏肉。おにぎりが一気にエスニックに。",
+   ing:"ごはん、タンドリーチキン(刻む)、パクチーor大葉",
+   how:"刻んだチキンを混ぜ込む。ターメリックライスにすると本格派。"},
+  {name:"鶏ごぼう味噌むすび", joke:false, color:"#8A6A4A", mood:["tsukare"], taste:["umami"], nutri:["fiber","protein"],
+   desc:"鶏とごぼうを味噌で炒めた滋味深い一品。噛むほどに土の香りとうまみ。",
+   ing:"温かいごはん、鶏もも、ごぼう(ささがき)、味噌、みりん",
+   how:"鶏ごぼうを味噌で炒め煮して混ぜ込む。"},
+  {name:"ミートボール甘酢むすび", joke:false, color:"#C05A3F", mood:["genki"], taste:["suppai","kotteri"], nutri:["protein"],
+   desc:"お弁当の人気者を米で包む発想の勝利。甘酢あんが冷めてもおいしい。",
+   ing:"ごはん、ミートボール(甘酢)2個、白ごま",
+   how:"ミートボールを中央に埋めてにぎる。あんは少なめに絡める。"},
+  {name:"ベーコンペッパーチーズむすび", joke:false, color:"#D98A6A", mood:["gattsuri"], taste:["kotteri","shio"], nutri:["protein","energy"],
+   desc:"カリカリベーコンと黒こしょう、チーズの塩気。ビールにも合う大人の洋風枠。",
+   ing:"温かいごはん、ベーコン(カリカリに焼く)、プロセスチーズ、黒こしょう",
+   how:"ベーコンとチーズを混ぜ込み、黒こしょうを強めに。"},
+  {name:"ウインナーケチャップむすび", joke:false, color:"#E06A5A", mood:["genki"], taste:["kotteri","suppai"], nutri:["energy"],
+   desc:"炒めウインナー×ケチャップの永遠の子ども味。遠足の記憶が香る。",
+   ing:"温かいごはん、ウインナー(輪切り炒め)、ケチャップ、黒こしょう",
+   how:"ケチャップを絡めたウインナーを混ぜ込む。"},
+  {name:"生姜焼きどっかんむすび", joke:false, color:"#B5652F", mood:["genki","tsukare"], taste:["kotteri","umami"], nutri:["protein"],
+   desc:"定食の王様・生姜焼きをそのまま具に。生姜の香りで午後のエンジンを再点火。",
+   ing:"ごはん、豚ロース生姜焼き(刻む)、キャベツ千切り少々",
+   how:"刻んだ生姜焼きとキャベツを具にしてにぎる。"},
+  {name:"ローストビーフわさびむすび", joke:false, color:"#A03A3A", mood:["gattsuri","bouken"], taste:["umami","karai"], nutri:["protein"],
+   desc:"しっとりローストビーフにわさび醤油。おにぎり界のちょっといい寿司ポジション。",
+   ing:"ごはん、ローストビーフ、わさび、しょうゆ、小ねぎ",
+   how:"わさび醤油をくぐらせた肉でごはんを包むように巻く。"},
+  {name:"焼き鳥缶マヨ七味むすび", joke:false, color:"#C9793F", mood:["tsukare","gattsuri"], taste:["kotteri","karai"], nutri:["protein"],
+   desc:"缶詰の焼き鳥にマヨと七味。3分で完成するのに満足度は居酒屋級。",
+   ing:"温かいごはん、焼き鳥缶(たれ)、マヨネーズ、七味唐辛子",
+   how:"缶の中身をたれごと混ぜ込み、七味をふる。"},
+  {name:"コンビーフ黒こしょうむすび", joke:false, color:"#B55A4A", mood:["gattsuri","bouken"], taste:["shio","kotteri"], nutri:["protein"],
+   desc:"ほぐしたコンビーフの塩気と脂を黒こしょうで引き締める。缶詰界の実力派。",
+   ing:"温かいごはん、コンビーフ、黒こしょう、小ねぎ、しょうゆ少々",
+   how:"軽く炒めたコンビーフを混ぜ込むと香ばしさアップ。"},
+  {name:"鯖味噌煮ほぐしむすび", joke:false, color:"#8A7A5F", mood:["tsukare"], taste:["umami","kotteri"], nutri:["protein"],
+   desc:"甘い味噌だれごとほぐした鯖を混ぜ込む。DHAも摂れる働き者の一個。",
+   ing:"温かいごはん、鯖味噌煮(缶でも)、生姜、白ごま、小ねぎ",
+   how:"骨を除いてほぐし、たれごと混ぜてにぎる。"},
+  {name:"塩サバレモンむすび", joke:false, color:"#9FAAB5", mood:["sappari"], taste:["shio","suppai"], nutri:["protein","vitamin"],
+   desc:"焼き塩サバにレモンをぎゅっ。脂の乗った青魚が一気に爽やかになる。",
+   ing:"温かいごはん、塩サバ(焼いてほぐす)、レモン汁、大葉、白ごま",
+   how:"レモンを絞ったサバと大葉を混ぜ込む。"},
+  {name:"さんま蒲焼山椒むすび", joke:false, color:"#8A5F3F", mood:["gattsuri","tsukare"], taste:["kotteri","umami"], nutri:["protein"],
+   desc:"缶詰の蒲焼に粉山椒をひとふり。甘辛だれと山椒の香りで即席うな重気分。",
+   ing:"温かいごはん、さんま蒲焼缶、粉山椒、白ごま",
+   how:"蒲焼をほぐしてたれごと混ぜ、山椒をふる。"},
+  {name:"うなぎ蒲焼ひつまぶし風むすび", joke:false, color:"#6B4A2F", mood:["genki","gattsuri"], taste:["kotteri","umami"], nutri:["protein","energy"],
+   desc:"刻みうなぎを混ぜ込んだ小さなひつまぶし。スタミナ切れの日の切り札。",
+   ing:"温かいごはん、うなぎ蒲焼(刻む)、たれ、粉山椒、大葉",
+   how:"たれを混ぜたごはんに刻みうなぎと大葉を混ぜてにぎる。"},
+  {name:"ぷりぷりえびマヨむすび", joke:false, color:"#F0906A", mood:["genki"], taste:["kotteri"], nutri:["protein"],
+   desc:"ぷりぷりのえびを甘めのマヨソースで。中華屋の人気者をおにぎりに移籍。",
+   ing:"ごはん、むきえび(茹で)、マヨネーズ、ケチャップ少々、レタス",
+   how:"えびマヨを具にしてレタスと一緒ににぎる。"},
+  {name:"ほたて醤油バターむすび", joke:false, color:"#E8C99F", mood:["gattsuri","tsukare"], taste:["umami","kotteri"], nutri:["protein"],
+   desc:"浜焼きの香りをそのまま米へ。ほたての甘みと焦がし醤油バターは正義。",
+   ing:"温かいごはん、ベビーほたて、バター、しょうゆ、黒こしょう",
+   how:"ほたてを醤油バターで焼いて混ぜ込む。"},
+  {name:"かにかまマヨサラダむすび", joke:false, color:"#E87A7A", mood:["sappari","genki"], taste:["shio","kotteri"], nutri:["protein"],
+   desc:"ほぐしかにかまとマヨの手軽なごちそう感。きゅうりを入れると食感が跳ねる。",
+   ing:"温かいごはん、かに風味かまぼこ、マヨネーズ、きゅうり(塩もみ)",
+   how:"具材を和えて混ぜ込む。水気はしっかり切る。"},
+  {name:"ちくわ磯辺マヨむすび", joke:false, color:"#D9CFA8", mood:["genki"], taste:["shio","umami"], nutri:["protein"],
+   desc:"青のり香るちくわの磯辺焼きを角切りに。庶民派なのにやたら手が伸びる。",
+   ing:"温かいごはん、ちくわ、青のり、マヨネーズ、しょうゆ少々",
+   how:"ちくわを青のりマヨで和えて混ぜ込む。"},
+  {name:"たこ飯風やわらかむすび", joke:false, color:"#B56A5A", mood:["tsukare","sappari"], taste:["umami"], nutri:["protein"],
+   desc:"だしで炊いたたこのやわらかな歯ごたえ。瀬戸内の香りがふわり。",
+   ing:"たこ入り炊き込みごはん(たこ・生姜・しょうゆ・だし)",
+   how:"炊き込みごはんを軽くにぎるだけ。木の芽があれば最高。"},
+  {name:"いか塩辛クリチむすび", joke:false, color:"#C9A8B5", mood:["bouken","gattsuri"], taste:["shio","umami"], nutri:["protein"],
+   desc:"塩辛の濃厚をクリームチーズがまろやかに包む、日本酒党が泣いて喜ぶ組み合わせ。",
+   ing:"温かいごはん、いかの塩辛、クリームチーズ、小ねぎ",
+   how:"塩辛とクリチを和えて具にする。量は控えめが上品。"},
+  {name:"あじ干物ほぐしむすび", joke:false, color:"#A8A08A", mood:["sappari","tsukare"], taste:["shio","umami"], nutri:["protein"],
+   desc:"朝ごはんの定番・あじの干物をほぐして混ぜ込む。素朴だけど間違いない味。",
+   ing:"温かいごはん、あじの干物(焼いてほぐす)、白ごま、大葉",
+   how:"骨を丁寧に除いてほぐし、ごま・大葉と混ぜる。"},
+  {name:"サバカレー缶スパイスむすび", joke:false, color:"#C9973F", mood:["bouken","genki"], taste:["karai","umami"], nutri:["protein"],
+   desc:"サバ缶×カレー粉は令和の発明。青魚の栄養をスパイスで食べやすく。",
+   ing:"温かいごはん、サバ水煮缶、カレー粉、マヨ少々、小ねぎ",
+   how:"汁気を切ったサバをカレーマヨで和えて混ぜ込む。"},
+  {name:"しめ鯖ガリの押し寿司風むすび", joke:false, color:"#8FA0AA", mood:["sappari","bouken"], taste:["suppai","shio"], nutri:["protein"],
+   desc:"しめ鯖とガリを酢飯で。にぎるだけで完成する、なんちゃってバッテラ。",
+   ing:"酢飯、しめ鯖(そぎ切り)、ガリ、白ごま、大葉",
+   how:"酢飯にガリとごまを混ぜ、しめ鯖を貼り付けるようににぎる。"},
+  {name:"ツナ大葉ポン酢むすび", joke:false, color:"#C9D9A8", mood:["sappari"], taste:["suppai","shio"], nutri:["protein"],
+   desc:"マヨを使わないさっぱり系ツナ。ポン酢の酸味と大葉で罪悪感ゼロ。",
+   ing:"温かいごはん、ツナ缶(油を切る)、ポン酢、大葉、白ごま",
+   how:"ツナをポン酢で和えて大葉と混ぜ込む。"},
+  {name:"カルボナーラ風むすび", joke:false, color:"#E8D9A8", mood:["gattsuri","bouken"], taste:["kotteri"], nutri:["protein","energy"],
+   desc:"ベーコン・卵黄・粉チーズ・黒こしょうを米で再構築。ローマもびっくりの背徳枠。",
+   ing:"温かいごはん、ベーコン、卵黄、粉チーズ、黒こしょう",
+   how:"炒めベーコンと粉チーズを混ぜ、中央に卵黄を忍ばせる。"},
+  {name:"ナポリタン風ケチャむすび", joke:false, color:"#D9583F", mood:["genki"], taste:["suppai","kotteri"], nutri:["energy"],
+   desc:"ウインナー・ピーマン・ケチャップの喫茶店トリオ。懐かしさで頬がゆるむ。",
+   ing:"温かいごはん、ウインナー、ピーマン、ケチャップ、粉チーズ",
+   how:"具材をケチャップで炒めて混ぜ込み、粉チーズをふる。"},
+  {name:"マルゲリータ風むすび", joke:false, color:"#D95A4A", mood:["genki","bouken"], taste:["suppai","kotteri"], nutri:["energy","vitamin"],
+   desc:"トマト・モッツァレラ・バジルの三色旗を米に掲げる。焼くとチーズがとろける。",
+   ing:"温かいごはん、ミニトマト、モッツァレラ、バジル、塩、オリーブオイル",
+   how:"具材を混ぜてにぎり、トースターで軽く焼くと本領発揮。"},
+  {name:"ドライカレースパイスむすび", joke:false, color:"#C9883A", mood:["genki","gattsuri"], taste:["karai"], nutri:["protein","energy"],
+   desc:"ひき肉と玉ねぎのドライカレーを混ぜ込むスパイス枠。食欲スイッチを強制ON。",
+   ing:"温かいごはん、合いびき肉、玉ねぎ、カレー粉、ケチャップ",
+   how:"ドライカレーを作って混ぜ込み、しっかりめににぎる。"},
+  {name:"チキンライス包みむすび", joke:false, color:"#E0704F", mood:["genki"], taste:["suppai","kotteri"], nutri:["protein","energy"],
+   desc:"オムライスの中身をそのままおにぎりに。薄焼き卵で巻けば手のひらオムライス。",
+   ing:"チキンライス(鶏・玉ねぎ・ケチャップ)、薄焼き卵(お好み)",
+   how:"チキンライスをにぎり、薄焼き卵で包むと映える。"},
+  {name:"ジェノベーゼ香るむすび", joke:false, color:"#5F9F4F", mood:["sappari","bouken"], taste:["shio","umami"], nutri:["vitamin"],
+   desc:"バジルソースを混ぜ込んだ緑の風。粉チーズと松の実で本格イタリアン。",
+   ing:"温かいごはん、ジェノベーゼソース、粉チーズ、ミニトマト(お好み)",
+   how:"ソースを混ぜ込んでにぎる。入れすぎるとゆるむので少量ずつ。"},
+  {name:"トマトリゾット風むすび", joke:false, color:"#D9604A", mood:["tsukare","sappari"], taste:["suppai","umami"], nutri:["vitamin"],
+   desc:"トマトジュースとコンソメで炊いた赤い米。リコピンと酸味で体が目を覚ます。",
+   ing:"米、トマトジュース、コンソメ、粉チーズ、黒こしょう",
+   how:"トマトジュースで炊いたごはんに粉チーズを混ぜてにぎる。"},
+  {name:"ガーリックシュリンプむすび", joke:false, color:"#E89A5F", mood:["gattsuri","genki"], taste:["kotteri","shio"], nutri:["protein"],
+   desc:"ハワイの屋台飯を米ごと丸めた一品。にんにくバターの香りが凶暴にうまい。",
+   ing:"ごはん、むきえび、にんにく、バター、しょうゆ、黒こしょう",
+   how:"ガーリックバターで炒めたえびを混ぜ込んでにぎる。"},
+  {name:"BLT風ベーコンレタスむすび", joke:false, color:"#D97A5A", mood:["genki"], taste:["shio","kotteri"], nutri:["protein","vitamin"],
+   desc:"ベーコン・レタス・トマトのサンド定番を海苔で包む。朝の完全体。",
+   ing:"ごはん、ベーコン、レタス、ミニトマト、マヨネーズ、焼き海苔",
+   how:"おにぎらず形式で層にして海苔で包み、半分に切る。"},
+  {name:"シーザーチキンむすび", joke:false, color:"#E8DFC0", mood:["sappari","genki"], taste:["kotteri","shio"], nutri:["protein"],
+   desc:"蒸し鶏×シーザードレッシング×粉チーズ。サラダチキン活用の最適解のひとつ。",
+   ing:"ごはん、サラダチキン、シーザードレッシング、レタス、粉チーズ",
+   how:"和えたチキンをレタスと一緒に具にする。"},
+  {name:"ツナコーンバターむすび", joke:false, color:"#E8C95F", mood:["genki"], taste:["kotteri","shio"], nutri:["protein","fiber"],
+   desc:"ツナとコーンの甘じょっぱ黄金コンビ。バター醤油で炒めれば無敵の香り。",
+   ing:"温かいごはん、ツナ缶、コーン、バター、しょうゆ",
+   how:"ツナコーンをバター醤油で炒めて混ぜ込む。"},
+  {name:"アボカドサーモンむすび", joke:false, color:"#8FBF5F", mood:["sappari","genki"], taste:["kotteri","shio"], nutri:["protein","vitamin"],
+   desc:"森のバターと鮭のマリアージュ。わさび醤油でカフェ風の一品に。",
+   ing:"ごはん、アボカド、スモークサーモン、わさび醤油、白ごま",
+   how:"角切りアボカドとサーモンをわさび醤油で和えて具にする。"},
+  {name:"クリームチーズおかかむすび", joke:false, color:"#E8E0D0", mood:["tsukare"], taste:["umami","kotteri"], nutri:["protein"],
+   desc:"クリチ×おかか醤油は和洋の名タッグ。まろやかさとだし感が疲れた舌にやさしい。",
+   ing:"温かいごはん、クリームチーズ(角切り)、かつお節、しょうゆ",
+   how:"おかか醤油とクリチをさっくり混ぜてにぎる。"},
+  {name:"粉チーズ黒こしょうむすび", joke:false, color:"#E8D9B0", mood:["gattsuri","sappari"], taste:["shio","kotteri"], nutri:["protein"],
+   desc:"カチョエペペの精神を米に。粉チーズと黒こしょうだけの潔いうまさ。",
+   ing:"温かいごはん、粉チーズ、黒こしょう、オリーブオイル少々、塩",
+   how:"全部混ぜてにぎるだけ。黒こしょうは粗挽きで多めに。"},
+  {name:"五目チャーハン風むすび", joke:false, color:"#D9B05F", mood:["genki","gattsuri"], taste:["umami","shio"], nutri:["energy"],
+   desc:"卵・ねぎ・チャーシューの香ばしチャーハンをそのまま三角に。冷めてもパラッと。",
+   ing:"チャーハン(卵・ねぎ・チャーシュー・しょうゆ)",
+   how:"かために作ったチャーハンを熱いうちににぎる。"},
+  {name:"麻婆しびれむすび", joke:false, color:"#C0402F", mood:["gattsuri","bouken"], taste:["karai"], nutri:["protein"],
+   desc:"汁気を飛ばした麻婆を混ぜ込む攻めの辛党枠。花椒の痺れが脳を再起動する。",
+   ing:"温かいごはん、麻婆豆腐(汁気少なめ)、花椒、小ねぎ",
+   how:"麻婆を煮詰めてから混ぜ込む。豆腐は木綿がにぎりやすい。"},
+  {name:"魯肉飯風とろとろむすび", joke:false, color:"#7A4A2A", mood:["gattsuri","bouken"], taste:["kotteri","umami"], nutri:["protein","energy"],
+   desc:"八角香る台湾の豚そぼろ煮を米に混ぜ込む。ひと口で夜市にワープ。",
+   ing:"温かいごはん、豚バラ(刻み煮込み)、八角、しょうゆ、砂糖、ゆで卵",
+   how:"煮込んだ豚を混ぜ込み、うずら卵を中央に忍ばせても。"},
+  {name:"ビビンバ風ナムルむすび", joke:false, color:"#C9603F", mood:["genki"], taste:["karai","umami"], nutri:["vitamin","protein"],
+   desc:"ナムルとそぼろ、コチュジャンを混ぜたひと口ビビンバ。野菜もしっかり摂れる。",
+   ing:"温かいごはん、ナムル(ほうれん草・にんじん・もやし)、牛そぼろ、コチュジャン",
+   how:"具材を全部混ぜ込んでにぎる。ごま油を垂らして香りづけ。"},
+  {name:"プルコギ甘辛むすび", joke:false, color:"#A8502F", mood:["gattsuri","genki"], taste:["kotteri","umami"], nutri:["protein"],
+   desc:"甘辛だれの牛プルコギをたっぷり混ぜ込む。焼肉気分を片手で味わえる。",
+   ing:"温かいごはん、牛プルコギ(炒め)、白ごま、小ねぎ",
+   how:"汁気を飛ばしたプルコギを混ぜ込んでにぎる。"},
+  {name:"キンパ風ごま油むすび", joke:false, color:"#4A6A3F", mood:["genki","sappari"], taste:["shio","umami"], nutri:["vitamin"],
+   desc:"ごま油と塩をまとった韓国海苔巻きの味をおにぎりで。たくあんの食感がアクセント。",
+   ing:"ごはん、ごま油、塩、たくあん、ほうれん草ナムル、韓国のり",
+   how:"ごま油と塩を混ぜたごはんに具を入れ、韓国のりで巻く。"},
+  {name:"ヤンニョムチキンむすび", joke:false, color:"#D9402F", mood:["genki","bouken"], taste:["karai","kotteri"], nutri:["protein"],
+   desc:"甘辛コチュジャンだれの韓国チキンを埋蔵。やみつき必至の赤い誘惑。",
+   ing:"ごはん、から揚げ、コチュジャン、ケチャップ、はちみつ、白ごま",
+   how:"たれを絡めたチキンを中央に埋めてにぎる。"},
+  {name:"ガパオ風バジル鶏むすび", joke:false, color:"#6F8A3F", mood:["bouken","genki"], taste:["karai","umami"], nutri:["protein"],
+   desc:"鶏ひきとバジル、ナンプラーの香りでタイ気分。目玉焼きを添えたくなる完成度。",
+   ing:"温かいごはん、鶏ひき肉、バジル、ナンプラー、オイスターソース、唐辛子",
+   how:"ガパオ炒めを作って混ぜ込む。汁気は飛ばしぎみに。"},
+  {name:"ナシゴレン風むすび", joke:false, color:"#C9793F", mood:["bouken"], taste:["karai","umami"], nutri:["energy"],
+   desc:"サンバル香るインドネシア風炒めごはん。エビと目玉焼きで屋台の完全再現を。",
+   ing:"ごはん、むきえび、サンバルorチリソース、ナンプラー、玉ねぎ",
+   how:"具材を炒め合わせてからにぎる。辛さはソースで調整。"},
+  {name:"エビチリ包みむすび", joke:false, color:"#E0503F", mood:["genki"], taste:["karai","suppai"], nutri:["protein"],
+   desc:"甘酸っぱいチリソースのえびを米で受け止める。中華の花形を片手サイズに。",
+   ing:"ごはん、エビチリ(汁気少なめ)、小ねぎ、白ごま",
+   how:"ソースを煮詰めたエビチリを具にしてにぎる。"},
+  {name:"油淋鶏ねぎだくむすび", joke:false, color:"#B5793F", mood:["tsukare","gattsuri"], taste:["suppai","umami"], nutri:["protein"],
+   desc:"香味ねぎだれをまとった揚げ鶏。酸味の効いただれが米に落ちる瞬間が最高。",
+   ing:"ごはん、鶏もも唐揚げ、長ねぎ、しょうゆ、酢、砂糖、ごま油",
+   how:"ねぎだれを絡めた鶏を刻んで具にする。"},
+  {name:"チーズタッカルビ風むすび", joke:false, color:"#E0603A", mood:["gattsuri"], taste:["karai","kotteri"], nutri:["protein"],
+   desc:"甘辛鶏ととろけるチーズの重量級コンビ。焼きおにぎりにするとチーズが糸を引く。",
+   ing:"ごはん、鶏ももコチュジャン炒め、ピザ用チーズ",
+   how:"具とチーズを混ぜてにぎり、トースターで焼くと完全体。"},
+  {name:"韓国のりフレークむすび", joke:false, color:"#3F4A3A", mood:["sappari","genki"], taste:["shio"], nutri:["free"],
+   desc:"ごま油香る韓国のりフレークを混ぜるだけ。シンプル最強の時短枠。",
+   ing:"温かいごはん、韓国のりフレーク、白ごま、ごま油少々",
+   how:"混ぜてにぎるだけ。塩は入れすぎ注意。"},
+  {name:"よだれ鶏風ピリ辛むすび", joke:false, color:"#C05A4A", mood:["bouken","sappari"], taste:["karai","suppai"], nutri:["protein"],
+   desc:"ラー油と酢、花椒の効いたよだれ鶏だれ×蒸し鶏。名前に恥じないやみつき度。",
+   ing:"ごはん、蒸し鶏、ラー油、酢、しょうゆ、花椒、小ねぎ",
+   how:"たれで和えた蒸し鶏を具にする。たれは絡める程度に。"},
+  {name:"十六穀梅ちりめんむすび", joke:false, color:"#B58A6A", mood:["sappari","tsukare"], taste:["suppai","shio"], nutri:["fiber","vitamin"],
+   desc:"雑穀のプチプチに梅とじゃこ。体が整う音が聞こえてきそうな健康枠。",
+   ing:"十六穀ごはん、梅干し、ちりめんじゃこ、白ごま",
+   how:"叩いた梅とじゃこを混ぜ込んでにぎる。"},
+  {name:"きのこたっぷり炊き込みむすび", joke:false, color:"#8A7A5F", mood:["tsukare"], taste:["umami"], nutri:["fiber"],
+   desc:"しめじ・舞茸・えのきの三重奏。きのこのだしが染みた米は冷めてもうまい。",
+   ing:"米、しめじ、舞茸、えのき、油揚げ、しょうゆ、だし",
+   how:"炊き込みごはんを軽くにぎる。三つ葉を散らすと上品。"},
+  {name:"なめ茸バターこくうまむすび", joke:false, color:"#B5924A", mood:["tsukare","gattsuri"], taste:["umami","kotteri"], nutri:["fiber"],
+   desc:"瓶詰めなめ茸にバターをひとかけ。とろみとコクで白米が無限に消える。",
+   ing:"温かいごはん、なめ茸、バター、小ねぎ、黒こしょう",
+   how:"温かいごはんになめ茸とバターを混ぜてにぎる。"},
+  {name:"小松菜じゃこ炒めむすび", joke:false, color:"#4F8A4F", mood:["sappari"], taste:["shio","umami"], nutri:["vitamin"],
+   desc:"ごま油で炒めた小松菜とじゃこ。カルシウムと鉄分の頼れる緑黄色枠。",
+   ing:"温かいごはん、小松菜、ちりめんじゃこ、ごま油、塩",
+   how:"炒めて水分を飛ばした具を混ぜ込む。"},
+  {name:"ほうれん草ごま和えむすび", joke:false, color:"#3F7A3F", mood:["tsukare","sappari"], taste:["umami"], nutri:["vitamin","fiber"],
+   desc:"甘めのごま和えを混ぜ込んだやさしい味。お浸しの残りの最高の再就職先。",
+   ing:"温かいごはん、ほうれん草のごま和え、白ごま",
+   how:"ごま和えの水気を切って混ぜ込んでにぎる。"},
+  {name:"切り干し大根の滋味むすび", joke:false, color:"#C9B58A", mood:["tsukare"], taste:["umami"], nutri:["fiber"],
+   desc:"だしを吸った切り干し大根の甘み。地味だけど滋味、噛むほど落ち着く味。",
+   ing:"温かいごはん、切り干し大根の煮物、白ごま",
+   how:"煮物を刻んで汁気を切り、混ぜ込む。"},
+  {name:"ブロッコリーおかかチーズむすび", joke:false, color:"#5F9F5F", mood:["genki"], taste:["umami","shio"], nutri:["fiber","protein"],
+   desc:"刻みブロッコリーにおかかとチーズ。緑の栄養をこっそり大量摂取できる。",
+   ing:"温かいごはん、ブロッコリー(茹でて刻む)、かつお節、プロセスチーズ、しょうゆ",
+   how:"具材を全部混ぜ込んでにぎる。"},
+  {name:"アボカドわさび醤油むすび", joke:false, color:"#7FAF5F", mood:["sappari","bouken"], taste:["karai","umami"], nutri:["vitamin"],
+   desc:"ねっとりアボカドにわさび醤油はほぼトロ。良質な脂質でお腹も心も満ちる。",
+   ing:"ごはん、アボカド、わさび、しょうゆ、白ごま、刻み海苔",
+   how:"角切りアボカドをわさび醤油で和えて具にする。"},
+  {name:"かぼちゃそぼろあんむすび", joke:false, color:"#E8A03F", mood:["tsukare"], taste:["umami","kotteri"], nutri:["vitamin","fiber"],
+   desc:"ほくほくかぼちゃと鶏そぼろの甘辛あん。ほっとする味でβカロテンも補給。",
+   ing:"温かいごはん、かぼちゃの煮物、鶏そぼろ",
+   how:"かぼちゃを粗くつぶしてそぼろと混ぜ込む。"},
+  {name:"さつまいもごま塩むすび", joke:false, color:"#A85A8F", mood:["tsukare","sappari"], taste:["shio"], nutri:["fiber","energy"],
+   desc:"角切りさつまいもの甘みにごま塩がキリッ。おこわ気分の素朴な幸せ。",
+   ing:"米、さつまいも(角切り)、塩、黒ごま",
+   how:"さつまいもを一緒に炊き込み、ごま塩をふってにぎる。"},
+  {name:"れんこんきんぴらむすび", joke:false, color:"#D9C9A8", mood:["genki"], taste:["karai","umami"], nutri:["fiber"],
+   desc:"シャキシャキれんこんのきんぴらを混ぜ込む。唐辛子の辛みと食感でご機嫌に。",
+   ing:"温かいごはん、れんこんきんぴら、白ごま、唐辛子",
+   how:"きんぴらを刻んで混ぜ込んでにぎる。"},
+  {name:"枝豆コーン塩バターむすび", joke:false, color:"#7FBF5F", mood:["genki"], taste:["shio","kotteri"], nutri:["fiber","protein"],
+   desc:"緑と黄色のつぶつぶコンビに塩バター。彩り満点でお弁当の主役になれる。",
+   ing:"温かいごはん、むき枝豆、コーン、バター、塩",
+   how:"バターを溶かし混ぜたごはんに具を混ぜてにぎる。"},
+  {name:"トマト丸ごと炊き込みむすび", joke:false, color:"#E0503F", mood:["sappari","bouken"], taste:["suppai","umami"], nutri:["vitamin"],
+   desc:"トマトを丸ごと炊飯器に入れる例のやつ。うまみと酸味が米一粒ずつに宿る。",
+   ing:"米、トマト1個、コンソメ、オリーブオイル、黒こしょう",
+   how:"トマトごと炊いて崩し混ぜ、オリーブオイルを垂らしてにぎる。"},
+  {name:"蒸し大豆カレーむすび", joke:false, color:"#C9973F", mood:["genki"], taste:["karai"], nutri:["protein","fiber"],
+   desc:"蒸し大豆をカレー粉で炒めた豆キーマ風。植物性タンパク質をスパイシーに。",
+   ing:"温かいごはん、蒸し大豆、カレー粉、ケチャップ、塩",
+   how:"大豆をカレー味に炒めて混ぜ込む。"},
+  {name:"菜の花辛子和えむすび", joke:false, color:"#9FBF3F", mood:["sappari","bouken"], taste:["karai","suppai"], nutri:["vitamin"],
+   desc:"ほろ苦い菜の花に辛子醤油。春の目覚めをひと口で感じる大人の味。",
+   ing:"温かいごはん、菜の花(茹で)、練り辛子、しょうゆ、白ごま",
+   how:"辛子和えを刻んで混ぜ込んでにぎる。"},
+  {name:"だし巻き包みむすび", joke:false, color:"#F0C95F", mood:["tsukare"], taste:["umami"], nutri:["protein"],
+   desc:"じゅわっとだしのあふれる卵焼きを丸ごと包む。京都の朝ごはんのような安心感。",
+   ing:"ごはん、だし巻き卵、焼き海苔、しょうゆ少々",
+   how:"厚めのだし巻きを中央に入れて包み、海苔を巻く。"},
+  {name:"半熟味玉まるごとむすび", joke:false, color:"#E8B53F", mood:["gattsuri"], taste:["umami","kotteri"], nutri:["protein"],
+   desc:"ラーメン屋の味玉を丸ごと1個埋蔵。割った瞬間の断面はもはやアート。",
+   ing:"ごはん、半熟味玉1個、焼き海苔、黒こしょう",
+   how:"味玉を中央に包み、崩れないようやさしくにぎる。"},
+  {name:"スクランブルケチャップむすび", joke:false, color:"#F0A85F", mood:["genki"], taste:["suppai","kotteri"], nutri:["protein"],
+   desc:"ふわとろスクランブルエッグにケチャップ。朝食プレートをそのまま片手に。",
+   ing:"温かいごはん、卵、バター、ケチャップ、塩こしょう",
+   how:"半熟スクランブルを混ぜ込んでふんわりにぎる。"},
+  {name:"カマンベールおかかむすび", joke:false, color:"#E8E0CF", mood:["bouken","gattsuri"], taste:["kotteri","umami"], nutri:["protein"],
+   desc:"とろけるカマンベールとおかか醤油の和洋折衷。ワインにも緑茶にも合う二刀流。",
+   ing:"温かいごはん、カマンベールチーズ、かつお節、しょうゆ",
+   how:"角切りカマンベールとおかか醤油を混ぜてにぎる。"},
+  {name:"チーズ入り焼きおにぎり", joke:false, color:"#D9A85F", mood:["gattsuri","tsukare"], taste:["kotteri","umami"], nutri:["energy"],
+   desc:"醤油焼きおにぎりの中からチーズがとろり。香ばしさとコクの二段構え。",
+   ing:"ごはん、プロセスチーズ、しょうゆ、みりん",
+   how:"チーズを包んでにぎり、たれを塗って両面を焼く。"},
+  {name:"うずら煮卵ごろごろむすび", joke:false, color:"#C99A6A", mood:["genki"], taste:["umami"], nutri:["protein"],
+   desc:"甘辛く煮たうずら卵を3個も埋蔵。どこを食べても卵に当たる宝探し仕様。",
+   ing:"ごはん、うずらの煮卵3個、白ごま",
+   how:"うずらを散らすように埋めてにぎる。"},
+  {name:"明太チーズ焼きむすび", joke:false, color:"#E0705F", mood:["gattsuri"], taste:["karai","kotteri"], nutri:["protein"],
+   desc:"明太子×チーズを包んで焼く鉄板進化系。カリカリの香ばしさに悶絶必至。",
+   ing:"ごはん、辛子明太子、ピザ用チーズ、しょうゆ",
+   how:"明太チーズを包んでにぎり、トースターで焼き目をつける。"},
+  {name:"納豆ごま油ねぎむすび", joke:false, color:"#8A7A4A", mood:["genki","tsukare"], taste:["umami"], nutri:["protein","fiber"],
+   desc:"ひきわり納豆にごま油とねぎ。発酵パワーで腸から元気になる朝の味方。",
+   ing:"温かいごはん、ひきわり納豆、ごま油、小ねぎ、しょうゆ",
+   how:"具材を混ぜ込んで手早くにぎる。海苔で巻くと食べやすい。"},
+  {name:"いぶりがっこクリチむすび", joke:false, color:"#B5924A", mood:["bouken","sappari"], taste:["shio","umami"], nutri:["free"],
+   desc:"燻製香るいぶりがっことクリームチーズ。秋田の居酒屋の名品をおにぎりに。",
+   ing:"温かいごはん、いぶりがっこ(刻む)、クリームチーズ、黒こしょう",
+   how:"具材を和えて混ぜ込む。ポリポリ食感を残すのがコツ。"},
+  {name:"しば漬けじゃこむすび", joke:false, color:"#A85A8F", mood:["sappari"], taste:["suppai","shio"], nutri:["fiber"],
+   desc:"京都のしば漬けの酸味とじゃこの塩気。紫色の彩りも美しい箸休め系。",
+   ing:"温かいごはん、しば漬け(刻む)、ちりめんじゃこ、白ごま",
+   how:"刻んだしば漬けとじゃこを混ぜ込む。"},
+  {name:"みょうが甘酢おかかむすび", joke:false, color:"#C97AA0", mood:["sappari"], taste:["suppai"], nutri:["vitamin"],
+   desc:"甘酢みょうがの香りとシャキシャキ感。夏の夕方に食べたい涼やかな一品。",
+   ing:"温かいごはん、みょうが甘酢漬け(刻む)、かつお節、しょうゆ少々",
+   how:"みょうがとおかかを混ぜ込んでにぎる。"},
+  {name:"生姜佃煮ぽかぽかむすび", joke:false, color:"#C9883F", mood:["tsukare"], taste:["umami","karai"], nutri:["free"],
+   desc:"甘辛い生姜の佃煮でじんわり温まる。冷え込む日のお守りみたいなおにぎり。",
+   ing:"温かいごはん、生姜の佃煮、白ごま、かつお節",
+   how:"佃煮を混ぜ込んでにぎるだけ。"},
+  {name:"にんにく味噌スタミナむすび", joke:false, color:"#A8793F", mood:["genki","gattsuri"], taste:["kotteri","umami"], nutri:["energy"],
+   desc:"刻みにんにく入りの甘辛味噌を塗って焼く東北風。香りで白飯が消えていく。",
+   ing:"ごはん、味噌、にんにく(すりおろし少々)、みりん、砂糖",
+   how:"にんにく味噌を塗ってトースターで焼き目をつける。"},
+  {name:"柚子胡椒蒸し鶏むすび", joke:false, color:"#BFC95F", mood:["sappari","bouken"], taste:["karai","shio"], nutri:["protein"],
+   desc:"柚子の香りと青唐辛子のキレを蒸し鶏に。九州生まれの上品な刺激。",
+   ing:"ごはん、蒸し鶏、柚子胡椒、マヨ少々、大葉",
+   how:"柚子胡椒マヨで和えた鶏を具にする。"},
+  {name:"梅みそ大葉むすび", joke:false, color:"#C05A5F", mood:["sappari","tsukare"], taste:["suppai","umami"], nutri:["vitamin"],
+   desc:"梅の酸味と味噌のコクを合わせた万能だれ。大葉の香りで後味すっきり。",
+   ing:"温かいごはん、梅干し、味噌、みりん、大葉",
+   how:"梅みそを練って具にし、大葉で包んでにぎる。"},
+  {name:"塩昆布クリームチーズむすび", joke:false, color:"#E8E0D0", mood:["tsukare"], taste:["shio","umami"], nutri:["free"],
+   desc:"塩昆布のうまみとクリチのコク。混ぜるだけで完成する怠け者の傑作。",
+   ing:"温かいごはん、塩昆布、クリームチーズ(角切り)、白ごま",
+   how:"全部混ぜてにぎるだけ。"},
+  {name:"キムチチーズとろけるむすび", joke:false, color:"#E0604A", mood:["gattsuri","genki"], taste:["karai","kotteri"], nutri:["protein"],
+   desc:"キムチの辛みをチーズがまろやかに受け止める。焼けばとろける二度おいしい枠。",
+   ing:"ごはん、キムチ(刻む)、ピザ用チーズ、ごま油",
+   how:"キムチとチーズを包んでにぎり、焼きおにぎりにしても◎。"},
+  {name:"味噌カツ風どてむすび", joke:false, color:"#8A5A3A", mood:["gattsuri"], taste:["kotteri","umami"], nutri:["protein","energy"],
+   desc:"八丁味噌だれをまとったひとくちカツを埋蔵。名古屋めしの魂を三角形に。",
+   ing:"ごはん、ひとくちカツ、八丁味噌だれ(味噌・みりん・砂糖)、白ごま",
+   how:"味噌だれを絡めたカツを中央に入れてにぎる。"},
+  {name:"深川めし風あさりむすび", joke:false, color:"#7A6A5A", mood:["tsukare"], taste:["umami"], nutri:["vitamin","protein"],
+   desc:"あさりとねぎを味噌で煮て混ぜ込む江戸の漁師飯。貝のだしが体にしみる。",
+   ing:"温かいごはん、あさりむき身、長ねぎ、味噌、生姜",
+   how:"あさりを味噌で煮て汁気を切り、混ぜ込む。"},
+  {name:"鶏飯風さらさらむすび", joke:false, color:"#D9C9A0", mood:["tsukare","sappari"], taste:["umami"], nutri:["protein"],
+   desc:"奄美の鶏飯の具を混ぜ込んだ一品。だしをかけてお茶漬けにする裏技も公認。",
+   ing:"ごはん、蒸し鶏、錦糸卵、椎茸甘煮、刻み海苔、柑橘の皮",
+   how:"具を混ぜ込んでにぎる。食べる直前に鶏だしをかけても。"},
+  {name:"タコライス風むすび", joke:false, color:"#C9603F", mood:["genki","bouken"], taste:["karai","kotteri"], nutri:["protein"],
+   desc:"スパイシーなタコミートとチーズ、レタスの沖縄生まれ。ひと口で南国気分。",
+   ing:"ごはん、タコミート(ひき肉+チリパウダー)、チーズ、レタス、トマト",
+   how:"おにぎらず形式で層にすると具だくさんでも崩れない。"},
+  {name:"ジューシー風炊き込みむすび", joke:false, color:"#B5924F", mood:["tsukare"], taste:["umami"], nutri:["fiber"],
+   desc:"豚とひじき、にんじんの沖縄風炊き込み。だしと豚のコクでうまみが渋滞。",
+   ing:"米、豚バラ、ひじき、にんじん、だし、しょうゆ",
+   how:"炊き込みごはんを軽くにぎるだけ。"},
+  {name:"いかめし風もちもちむすび", joke:false, color:"#7A5A6A", mood:["gattsuri"], taste:["umami","kotteri"], nutri:["protein"],
+   desc:"甘辛く煮たいかともち米のもっちり感。駅弁の名作をひと口サイズで。",
+   ing:"もち米入りごはん、いか(甘辛煮・刻む)、煮汁少々",
+   how:"煮汁を混ぜたごはんに刻みいかを混ぜてにぎる。"},
+  {name:"ますのすし風むすび", joke:false, color:"#E88A7A", mood:["sappari"], taste:["suppai","shio"], nutri:["protein"],
+   desc:"酢飯に鱒をのせた富山の名物駅弁風。笹の葉があれば気分は特急列車。",
+   ing:"酢飯、鱒(またはサーモン)の薄切り、笹の葉(あれば)",
+   how:"酢飯をにぎり、鱒を貼り付けて笹で包む。"},
+  {name:"五平餅風くるみ味噌むすび", joke:false, color:"#B5793A", mood:["tsukare"], taste:["umami","kotteri"], nutri:["energy"],
+   desc:"香ばしいくるみ味噌だれを塗って焼く信州の味。甘じょっぱさが癖になる。",
+   ing:"ごはん(半つぶし)、くるみ、味噌、砂糖、みりん",
+   how:"米を軽くつぶして小判型にし、くるみ味噌を塗って焼く。"},
+  {name:"はまぐりしぐれむすび", joke:false, color:"#8A6A5A", mood:["tsukare"], taste:["umami"], nutri:["vitamin"],
+   desc:"桑名名物・貝のしぐれ煮を混ぜ込む。生姜香る濃厚なうまみは米泥棒。",
+   ing:"温かいごはん、はまぐり(またはあさり)のしぐれ煮、白ごま",
+   how:"しぐれ煮を混ぜ込んでにぎるだけ。"},
+  {name:"山賊焼き風にんにく醤油むすび", joke:false, color:"#C9793A", mood:["gattsuri","genki"], taste:["kotteri","umami"], nutri:["protein"],
+   desc:"にんにく醤油に漬けた鶏の揚げ焼きを豪快に。信州の山賊もにっこりの食べ応え。",
+   ing:"ごはん、鶏もも(にんにく醤油漬けを揚げ焼き)、キャベツ",
+   how:"食べやすく切った山賊焼きを中央にどんと入れる。"},
+  {name:"栗ごはんほくほくむすび", joke:false, color:"#E8B55F", mood:["tsukare"], taste:["umami","shio"], nutri:["energy","fiber"],
+   desc:"ほくほくの栗と塩味のごはん。秋をまるごとにぎった季節のごちそう。",
+   ing:"米、むき栗、塩、酒、黒ごま",
+   how:"栗ごはんを炊いて、栗を崩さないようにぎる。"},
+  {name:"たけのこ土佐煮むすび", joke:false, color:"#D9C99A", mood:["sappari"], taste:["umami"], nutri:["fiber"],
+   desc:"おかかをまとったたけのこのシャクシャク食感。春の香りを閉じ込めて。",
+   ing:"温かいごはん、たけのこ土佐煮(刻む)、かつお節、木の芽(あれば)",
+   how:"刻んだ土佐煮を混ぜ込んでにぎる。"},
+  {name:"新生姜の炊き込みむすび", joke:false, color:"#E8C9C0", mood:["sappari","genki"], taste:["karai","umami"], nutri:["vitamin"],
+   desc:"新生姜と油揚げのさっぱり炊き込み。ピンクがかった彩りと香りで初夏を先取り。",
+   ing:"米、新生姜(千切り)、油揚げ、だし、薄口しょうゆ",
+   how:"炊き込みごはんを軽くにぎる。白ごまをふって。"},
+  {name:"秋鮭ときのこのむすび", joke:false, color:"#E0885F", mood:["tsukare"], taste:["umami"], nutri:["protein","fiber"],
+   desc:"脂ののった秋鮭と舞茸の香り。実りの季節をひと粒残らず味わう一品。",
+   ing:"米、生鮭、舞茸、しめじ、だし、しょうゆ",
+   how:"鮭ときのこを一緒に炊き込み、ほぐし混ぜてにぎる。"},
+  {name:"ホタルイカ沖漬けむすび", joke:false, color:"#6A5A7A", mood:["bouken","gattsuri"], taste:["umami","shio"], nutri:["protein"],
+   desc:"富山湾の宝石・ホタルイカの沖漬けを丸ごと。濃厚なワタのうまみが押し寄せる。",
+   ing:"ごはん、ホタルイカ沖漬け、大葉、白ごま",
+   how:"沖漬けを2〜3杯中央に入れてにぎる。"},
+  {name:"牡蠣の炊き込みむすび", joke:false, color:"#A8A89A", mood:["tsukare","gattsuri"], taste:["umami"], nutri:["vitamin","protein"],
+   desc:"海のミルクのだしを吸い切った米。亜鉛と鉄分もたっぷりの冬のごほうび。",
+   ing:"米、牡蠣、生姜、しょうゆ、だし、三つ葉",
+   how:"牡蠣を後入れでふっくら炊き上げ、軽くにぎる。"},
+  {name:"穴子ふっくら煮むすび", joke:false, color:"#8A6A4A", mood:["gattsuri"], taste:["umami","kotteri"], nutri:["protein"],
+   desc:"甘だれのふっくら煮穴子を米で抱きしめる。ひと口で寿司屋の〆の気分。",
+   ing:"ごはん、煮穴子、たれ、粉山椒、きゅうり(お好み)",
+   how:"煮穴子を刻んでたれごと混ぜ込むか、上にのせてにぎる。"},
+  {name:"冷や汁風さっぱりむすび", joke:false, color:"#C9D9C0", mood:["sappari","tsukare"], taste:["umami","suppai"], nutri:["protein"],
+   desc:"焼きあじ・味噌・きゅうり・大葉の宮崎の夏の知恵。食欲がない日もこれなら。",
+   ing:"ごはん、あじの干物(ほぐし)、味噌、きゅうり、大葉、白ごま",
+   how:"具材を混ぜ込んでにぎる。仕上げに冷やしだしをかけても。",
+   caution:"きゅうりの水気はしっかり絞ってから混ぜてください。"},
+  {name:"七草風菜飯むすび", joke:false, color:"#9FBF7F", mood:["sappari","tsukare"], taste:["shio"], nutri:["vitamin","fiber"],
+   desc:"かぶや大根の葉を刻んだ塩味の菜飯。胃腸を休めたい日のリセットボタン。",
+   ing:"温かいごはん、かぶ・大根の葉(塩茹でして刻む)、塩、白ごま",
+   how:"水気を絞った菜を混ぜ込んで塩でにぎる。"},
+
+  // ---- 面白(攻め) ----
+  {name:"プロテイン米化むすび", joke:true, color:"#C9A9E0",
+   mood:["genki","bouken","gattsuri"], taste:["kotteri"], nutri:["protein"],
+   desc:"ごはんにプレーンプロテインを直接混ぜ込むビルダー飯の最終形態。きなこ風味と言い張れば意外といける…かもしれない。",
+   ing:"温かいごはん、プレーン or ソイプロテイン大さじ1、きなこ、塩少々",
+   how:"ごはんが温かいうちにプロテインときなこを混ぜ、ダマにならないよう手早くにぎる。",
+   caution:"味付きプロテイン(チョコ味等)を使うと未知の何かが完成します。プロテインは1食分の目安量を守って。"},
+  {name:"コオロギパウダー未来むすび", joke:true, color:"#7A6248",
+   mood:["bouken"], taste:["umami","shio"], nutri:["protein"],
+   desc:"未来のタンパク源・コオロギパウダーを混ぜ込んだSFおにぎり。香ばしくてえびせん風味、と評判(諸説あり)。",
+   ing:"温かいごはん、食用コオロギパウダー小さじ1、ごま油、塩、白ごま",
+   how:"パウダーとごま油・塩を混ぜ込んでにぎる。白ごまでカムフラージュ可能。",
+   caution:"甲殻類アレルギーの方はNG。必ず食用として販売されているものを使ってください。"},
+  {name:"青汁グリーンモンスターむすび", joke:true, color:"#5F9F3F",
+   mood:["bouken","genki"], taste:["shio"], nutri:["vitamin","fiber"],
+   desc:"青汁粉末で米が完全に緑化。見た目は芝生、味は意外と抹茶塩むすび。健康への圧が強い。",
+   ing:"温かいごはん、青汁粉末1包、塩、白ごま、大葉(さらに緑を足したい人向け)",
+   how:"青汁粉末を全体が緑になるまで混ぜ、塩でにぎる。写真映え(?)は保証。",
+   caution:"青汁は1日の目安量の範囲で。緑の主張が強いので職場で食べる際は覚悟を。"},
+  {name:"エナドリ風味ライジングむすび", joke:true, color:"#EFD03C",
+   mood:["genki","bouken"], taste:["suppai"], nutri:["energy"],
+   desc:"エナジードリンク(少量)で香りづけした甘酸っぱい攻めの一品。翼を授かるかは自己責任。",
+   ing:"温かいごはん、エナジードリンク大さじ1、レモン汁少々、塩",
+   how:"炊きあがったごはんにエナドリとレモン汁を軽く混ぜてにぎる。ほのかに漂う「あの香り」。",
+   caution:"カフェインの摂りすぎに注意。お子さま・カフェインに弱い方は避けてください。"},
+  {name:"サプリ埋蔵金むすび", joke:true, color:"#E0B9C9",
+   mood:["bouken"], taste:["shio"], nutri:["vitamin"],
+   desc:"具の代わりにマルチビタミングミを仕込んだトラップおにぎり。噛んだ瞬間、口内が突然フルーツ味になる。",
+   ing:"温かいごはん、ビタミングミ2〜3粒、塩",
+   how:"中央にグミを埋めて普通ににぎる。差し入れると友情が試される。",
+   caution:"グミサプリは1日の摂取目安量を厳守。錠剤タイプのサプリは混ぜないでください(そのまま水で飲みましょう)。"},
+  {name:"納豆コーヒーむすび", joke:true, color:"#6B4A32",
+   mood:["bouken"], taste:["kotteri","umami"], nutri:["protein"],
+   desc:"納豆×インスタントコーヒーの禁断のマリアージュ。「意外と味噌っぽくて合う」と言う勇者が3年に1人現れる。",
+   ing:"温かいごはん、納豆1パック、インスタントコーヒー粉末ひとつまみ、しょうゆ",
+   how:"納豆にコーヒー粉末を混ぜてから、ごはんの具にしてにぎる。",
+   caution:"入れすぎるとただの苦い納豆です。ひとつまみが限界ライン。"},
+  {name:"くさや香る漢のむすび", joke:true, color:"#8F8A6E",
+   mood:["bouken","gattsuri"], taste:["umami","shio"], nutri:["protein"],
+   desc:"伊豆諸島の発酵干物・くさやを具にした、香りの暴力系おにぎり。うまみは本物。周囲の理解は別問題。",
+   ing:"温かいごはん、くさや(焼いてほぐす)、大葉、白ごま",
+   how:"焼いたくさやをほぐし、大葉と一緒に具にする。密閉容器での持ち運び推奨。",
+   caution:"換気できる場所で調理を。屋内・電車内での開封は国際問題に発展する恐れがあります。"},
+  {name:"ドリアン果実の王様むすび", joke:true, color:"#D9C33C",
+   mood:["bouken"], taste:["kotteri","suppai"], nutri:["energy","vitamin"],
+   desc:"果物の王様ドリアンを米で包んだ東南アジア風(?)スイーツおにぎり。濃厚クリーミー、ただし香りも王様級。",
+   ing:"温かいごはん(ココナッツミルク少々で炊くと本格派)、ドリアン果肉、塩ひとつまみ",
+   how:"果肉を具にしてにぎる。塩をひとつまみ入れると甘みが引き立つ。",
+   caution:"ホテルや公共交通機関への持ち込みは多くの国で禁止されています。おにぎりにしても、です。"},
+  {name:"チョコミント清涼むすび", joke:true, color:"#6FD0C0",
+   mood:["bouken","sappari"], taste:["kotteri","suppai"], nutri:["energy"],
+   desc:"チョコミントアイスの精神を米に宿した攻めのスイーツむすび。口の中が「歯磨き後のデザート」状態になる。",
+   ing:"温かいごはん、板チョコ(刻み)、ミントの葉、練乳少々、塩ひとつまみ",
+   how:"粗熱を取ったごはんに刻みチョコとミントを混ぜてにぎる。チョコが溶けきる前が勝負。",
+   caution:"チョコミント派とアンチの対立を加速させる恐れがあります。職場での配布は慎重に。"},
+  {name:"にんにく丸ごとバクダンむすび", joke:true, color:"#E8E0C9",
+   mood:["genki","gattsuri","bouken"], taste:["kotteri","umami"], nutri:["energy"],
+   desc:"素揚げにんにくを丸ごと3粒埋め込んだスタミナの塊。明日の予定を確認してからにぎってください。",
+   ing:"温かいごはん、にんにく3粒(素揚げor ホイル焼き)、ごま油、塩、黒こしょう",
+   how:"ほくほくのにんにくを中央に埋めてにぎる。ガーリックチップをまぶすと更に凶悪。",
+   caution:"翌日が休みの日限定を強く推奨。にんにくの食べすぎは胃腸に負担がかかるので3粒まで。"},
+  {name:"デスソース・ロシアンむすび", joke:true, color:"#C42B2B",
+   mood:["bouken","gattsuri"], taste:["karai"], nutri:["free"],
+   desc:"複数個のうち1個だけ激辛ソース入り、というパーティー用トラップおにぎり。友情と引き換えに盛り上がりを手に入れろ。",
+   ing:"温かいごはん、ツナマヨ(全個共通)、激辛ソース数滴(当たり用)、焼き海苔",
+   how:"全部同じ見た目でにぎり、1個だけツナマヨに激辛ソースを混ぜる。にぎった本人も分からなくなるのが醍醐味。",
+   caution:"激辛ソースはごく少量で十分です。辛いものが苦手な人・体調の悪い人には食べさせないこと。牛乳を用意してから開始を。"},
+  {name:"シュールストレミング限界むすび", joke:true, color:"#7A8A99",
+   mood:["bouken"], taste:["umami","suppai","shio"], nutri:["protein"],
+   desc:"世界一臭い缶詰と名高いシュールストレミングを具にした、人類の限界に挑むおにぎり。うまみだけは世界クラス。",
+   ing:"ごはん、シュールストレミング少量、じゃがいも(茹で)、サワークリーム、ディル",
+   how:"本場スウェーデン式にじゃがいも・サワークリームと合わせて具に。臭みが和らぎ意外と食べられる…らしい。",
+   caution:"開缶は必ず屋外・水中で。飛行機への持ち込みは禁止。近隣への配慮を最優先してください。"},
+  {name:"わさび一本勝負むすび", joke:true, color:"#8FBF5F",
+   mood:["bouken","sappari"], taste:["karai","suppai"], nutri:["free"],
+   desc:"具が本わさびのみ、という潔さ全振りの一品。鼻に抜ける衝撃の向こう側に、わさび本来の甘みが待っている(かもしれない)。",
+   ing:"温かいごはん、本わさび(すりおろし)、しょうゆ少々、焼き海苔",
+   how:"わさび醤油を中央に仕込んでにぎる。本わさびを使うと香りが良く、意外と上品。",
+   caution:"チューブわさび大盛りは危険です。涙腺の決壊にご注意ください。"},
+  {name:"ポテチクラッシュ背徳むすび", joke:true, color:"#E8C97A",
+   mood:["gattsuri","bouken"], taste:["shio","kotteri"], nutri:["energy"],
+   desc:"砕いたポテトチップスを混ぜ込んだ炭水化物×炭水化物の禁じ手。ザクザク食感と塩気で脳が直接よろこぶ。",
+   ing:"温かいごはん、ポテトチップス(うすしお or コンソメ)ひとつかみ、マヨネーズ少々、黒こしょう",
+   how:"袋の上から砕いたポテチを食べる直前に混ぜてにぎる。時間が経つとしんなりするので即食推奨。",
+   caution:"カロリーの計算はしないのがルールです。夜中に作ると背徳感が3倍になります。"},
+  {name:"BCAAスポドリ炊きむすび", joke:true, color:"#7FBFDF", mood:["genki","bouken"], taste:["suppai"], nutri:["protein"],
+   desc:"スポーツドリンク味のBCAAで香りづけした爽やか(?)な一品。ジムの香りがする米という新体験。",
+   ing:"温かいごはん、BCAAパウダー(グレープ味等)ひとつまみ、塩",
+   how:"少量を混ぜ込んで塩でにぎる。米が薄紫に染まったら成功。",
+   caution:"BCAAは1回分の目安量を守って。入れすぎると甘味料の甘さが暴走します。"},
+  {name:"クレアチンパンプむすび", joke:true, color:"#DFDFEF", mood:["genki","gattsuri","bouken"], taste:["shio"], nutri:["protein"],
+   desc:"無味無臭のクレアチンを混ぜた見た目普通のトレーニーむすび。何も変わらないのが逆に面白い。",
+   ing:"温かいごはん、クレアチン1回分、塩、鶏そぼろ",
+   how:"クレアチンを混ぜてにぎるだけ。効果は数週間後の君の背中で確認。",
+   caution:"摂取目安量を厳守し、水分を多めに摂ってください。"},
+  {name:"マカ元気玉むすび", joke:true, color:"#C9A87A", mood:["genki","bouken"], taste:["umami"], nutri:["vitamin"],
+   desc:"アンデスの活力源マカパウダー入り。ほんのり土の香りがする、標高4000mの味。",
+   ing:"温かいごはん、マカパウダー小さじ1/2、ごま塩、かつお節",
+   how:"パウダーをおかかと混ぜてカムフラージュしてにぎる。",
+   caution:"マカは摂取目安量を守って。体質に合わない場合は中止を。"},
+  {name:"ウコンパワー黄金むすび", joke:true, color:"#E8B52F", mood:["genki","bouken"], taste:["karai"], nutri:["vitamin"],
+   desc:"ウコン(ターメリック)で米を黄金に染めた飲み会前の願掛けむすび。効果のほどは翌朝の君に聞け。",
+   ing:"温かいごはん、ターメリック小さじ1/2、塩、黒こしょう、オリーブオイル",
+   how:"ターメリックと油を混ぜ込んでにぎる。手が黄色くなるのは仕様。",
+   caution:"ウコンの過剰摂取は肝臓に負担がかかることがあります。少量で。"},
+  {name:"酵素ドリンクマリネむすび", joke:true, color:"#C97A5F", mood:["bouken"], taste:["suppai"], nutri:["vitamin"],
+   desc:"ファスティング用の酵素ドリンクをまとった甘酸っぱい健康意識高い系。断食の意味は問わない方向で。",
+   ing:"温かいごはん、酵素ドリンク小さじ1、塩、白ごま",
+   how:"酵素ドリンクを風味づけ程度に混ぜてにぎる。",
+   caution:"糖分が多い製品もあるので少量に。ファスティング中の方は本末転倒にご注意。"},
+  {name:"完全栄養パウダーむすび", joke:true, color:"#B5A88A", mood:["genki","bouken"], taste:["kotteri"], nutri:["protein","vitamin","fiber"],
+   desc:"完全栄養食パウダーを混ぜ込み、理論上これだけで生きていける(?)おにぎりが爆誕。味は理論値。",
+   ing:"温かいごはん、完全栄養パウダー(ココア味以外推奨)、塩",
+   how:"少量ずつ混ぜてにぎる。きなこ系の味なら意外と成立する。",
+   caution:"これだけで生きていけるわけではありません。普通の食事もしましょう。"},
+  {name:"ユーグレナ深緑むすび", joke:true, color:"#4F7F3F", mood:["bouken","genki"], taste:["shio"], nutri:["vitamin","protein"],
+   desc:"59種の栄養素を持つ藻・ミドリムシのパウダー入り。名前で損してるが中身はエリート。",
+   ing:"温かいごはん、ユーグレナパウダー小さじ1/2、塩、白ごま",
+   how:"パウダーを混ぜ込んで塩でにぎる。抹茶と言い張れば通る緑。",
+   caution:"食用パウダーを使用し、目安量を守ってください。"},
+  {name:"スピルリナ真緑むすび", joke:true, color:"#2F6F4F", mood:["bouken"], taste:["shio"], nutri:["protein","vitamin"],
+   desc:"スーパーフード・スピルリナで米が深海のような緑に。NASAも注目の藻を君の胃袋にも。",
+   ing:"温かいごはん、スピルリナパウダー小さじ1/2、塩、ごま油",
+   how:"ごま油と一緒に混ぜると磯の風味っぽくなって食べやすい。",
+   caution:"独特の香りがあるので少量から。目安量を守って。"},
+  {name:"コラーゲンぷるぷるむすび", joke:true, color:"#EFD9D9", mood:["genki","bouken"], taste:["umami"], nutri:["protein"],
+   desc:"コラーゲンパウダーを混ぜ込んだ美容系(自称)おにぎり。ぷるぷるになるのは主に米。",
+   ing:"温かいごはん、コラーゲンパウダー1回分、鶏そぼろ、白ごま",
+   how:"パウダーを温かいごはんに溶かし混ぜてにぎる。",
+   caution:"効果には個人差があります。目安量を守って。"},
+  {name:"MCTオイルギトギトむすび", joke:true, color:"#EFE0B5", mood:["genki","bouken"], taste:["kotteri"], nutri:["energy"],
+   desc:"MCTオイルをまとわせたケトジェニック風おにぎり。糖質の塊にかけている時点で何かがおかしい。",
+   ing:"温かいごはん、MCTオイル小さじ1、塩、かつお節",
+   how:"オイルと塩を混ぜてにぎる。手がすべるのでラップ推奨。",
+   caution:"MCTオイルは一度に摂りすぎるとお腹がゆるくなります。小さじ1まで。"},
+  {name:"食物繊維パウダー整腸むすび", joke:true, color:"#D9CFB5", mood:["bouken"], taste:["shio"], nutri:["fiber"],
+   desc:"難消化性デキストリンを混ぜた腸活ガチ勢むすび。無味無臭ゆえ、入っているかは腸のみぞ知る。",
+   ing:"温かいごはん、難消化性デキストリン1回分、塩昆布",
+   how:"パウダーを混ぜ込んで塩昆布と一緒ににぎる。",
+   caution:"摂りすぎるとお腹が張ることがあります。目安量を守って。"},
+  {name:"プロテインバー丸ごとむすび", joke:true, color:"#8A6A4F", mood:["gattsuri","bouken"], taste:["kotteri"], nutri:["protein","energy"],
+   desc:"チョコ味プロテインバーを具として埋めた筋肉の暴挙。甘じょっぱいの最終形態がここに。",
+   ing:"温かいごはん、プロテインバー(半分に切る)、塩",
+   how:"バーを中央に埋めてにぎる。噛むたびに訪れるチョコと米の対話。",
+   caution:"完全にネタです。素直に別々に食べた方がおいしいことは保証します。"},
+  {name:"ニンニク卵黄パワーむすび", joke:true, color:"#D9B57A", mood:["genki","bouken"], taste:["kotteri","umami"], nutri:["protein"],
+   desc:"健康食品の王道・にんにく卵黄を自作して混ぜ込む。九州のおばあちゃんの知恵、直球実装版。",
+   ing:"温かいごはん、にんにく(すりおろし少々)、卵黄、しょうゆ",
+   how:"にんにく醤油卵黄を中央に落としてにぎる。",
+   caution:"翌日に人と会う予定を確認してから。生卵黄は新鮮なものを。"},
+  {name:"すっぽんパウダー滋養むすび", joke:true, color:"#7A8A6A", mood:["genki","bouken"], taste:["umami"], nutri:["protein"],
+   desc:"高級食材すっぽんのパウダーで滋養強壮。おにぎりが一気に料亭価格になる問題作。",
+   ing:"温かいごはん、すっぽんパウダー、塩、小ねぎ",
+   how:"パウダーを混ぜ込んでにぎる。だし感が出て実は普通においしい説あり。",
+   caution:"サプリタイプは目安量を守って。"},
+  {name:"イナゴ佃煮クラシックむすび", joke:true, color:"#8A7A3F", mood:["bouken"], taste:["umami","kotteri"], nutri:["protein"],
+   desc:"実は長野の伝統食であるイナゴの佃煮を正々堂々と具に。甘辛くて小えびみたい、というのは本当。",
+   ing:"温かいごはん、イナゴの佃煮、白ごま",
+   how:"佃煮を2〜3匹中央に。姿が見えないよう混ぜ込む逃げ道もあり。",
+   caution:"甲殻類アレルギーの方は避けてください。見た目の衝撃は保証付き。"},
+  {name:"蜂の子ごはん高級むすび", joke:true, color:"#D9C97A", mood:["bouken"], taste:["umami"], nutri:["protein"],
+   desc:"岐阜・長野の高級珍味・蜂の子を混ぜ込む。クリーミーで濃厚、通は「大地のバター」と呼ぶとか。",
+   ing:"温かいごはん、蜂の子の甘露煮、白ごま",
+   how:"甘露煮を混ぜ込んでにぎる。味は本当においしいので二度驚く。",
+   caution:"ハチアレルギーの方は絶対に避けてください。"},
+  {name:"カイコさなぎ韓国風むすび", joke:true, color:"#A8926A", mood:["bouken"], taste:["umami","shio"], nutri:["protein"],
+   desc:"韓国の屋台おやつ・ポンテギ(カイコのさなぎ)を具に。香りは独特、タンパク質は優等生。",
+   ing:"温かいごはん、ポンテギ缶、ごま油、塩",
+   how:"汁気を切ってごま油で和え、混ぜ込む。",
+   caution:"独特の風味です。初挑戦は1〜2匹から。アレルギー体質の方は注意。"},
+  {name:"ミールワームふりかけむすび", joke:true, color:"#B5A05F", mood:["bouken"], taste:["shio"], nutri:["protein"],
+   desc:"乾燥ミールワームを砕いてふりかけに。香ばしくてナッツ風味、と昆虫食界隈では評判。",
+   ing:"温かいごはん、食用乾燥ミールワーム(砕く)、塩、白ごま",
+   how:"砕いてごまと混ぜれば見た目はほぼ普通のふりかけ。",
+   caution:"必ず食用を使用。甲殻類アレルギーの方はNG。"},
+  {name:"サソリ様のせ皇帝むすび", joke:true, color:"#5F4A3F", mood:["bouken"], taste:["shio"], nutri:["protein"],
+   desc:"食用サソリを頂上に鎮座させた見た目インパクト極振りの一品。味はほぼ素揚げの何か。",
+   ing:"ごはん、食用サソリ(素揚げ)1匹、塩",
+   how:"普通の塩むすびの頂上にサソリを飾る。撮影してから食べるのが作法。",
+   caution:"必ず食用として販売されているものを。甲殻類アレルギーの方はNG。"},
+  {name:"ワニ肉ジャーキーむすび", joke:true, color:"#8A9A7A", mood:["bouken","gattsuri"], taste:["shio","umami"], nutri:["protein"],
+   desc:"高タンパク低脂質のワニ肉を具に。鶏むねに近い味で、実は真面目にヘルシーという裏切り。",
+   ing:"温かいごはん、ワニ肉ジャーキー(刻む)、マヨ少々、黒こしょう",
+   how:"刻んだジャーキーをマヨで和えて混ぜ込む。",
+   caution:"ジャーキーは塩分が強めなので量は控えめに。"},
+  {name:"カンガルー肉ルーむすび", joke:true, color:"#A85A4A", mood:["bouken","gattsuri"], taste:["umami"], nutri:["protein"],
+   desc:"オーストラリアではスーパーに並ぶルーミート。赤身の濃いうまみで、名前ほどふざけていない。",
+   ing:"ごはん、カンガルー肉(焼いて刻む)、塩、黒こしょう、クレソン",
+   how:"焼いた肉を刻んで具にする。ミディアムレアが柔らかい。",
+   caution:"中心部までしっかり加熱してください。"},
+  {name:"鮒寿司の乳酸爆弾むすび", joke:true, color:"#C9B58A", mood:["bouken"], taste:["suppai","umami"], nutri:["protein"],
+   desc:"滋賀の伝統発酵食・鮒寿司を薄切りで。チーズのような濃厚さと強烈な酸味、香りは覚悟の上で。",
+   ing:"温かいごはん、鮒寿司(薄切り)、白ごま",
+   how:"薄切りを1〜2枚のせてにぎる。飯(いい)も少し混ぜると通。",
+   caution:"香りが強いので周囲の理解を得てから。妊娠中の方は避けてください。"},
+  {name:"臭豆腐チャレンジむすび", joke:true, color:"#9A9A6A", mood:["bouken"], taste:["umami","shio"], nutri:["protein"],
+   desc:"台湾夜市の名物・臭豆腐を揚げて具に。香りは事件、味は普通においしい豆腐という二重構造。",
+   ing:"ごはん、臭豆腐(揚げ)、甘辛だれ、パクチー",
+   how:"揚げ臭豆腐を刻んでたれと混ぜ込む。",
+   caution:"調理中の換気は必須。集合住宅では近隣への配慮を。"},
+  {name:"ブルーチーズはちみつむすび", joke:true, color:"#B5C9D9", mood:["bouken"], taste:["kotteri","shio"], nutri:["protein"],
+   desc:"ゴルゴンゾーラ×はちみつを米で受ける攻めのイタリアン。ワイン片手におにぎりという背徳。",
+   ing:"温かいごはん、ブルーチーズ、はちみつ、黒こしょう、くるみ",
+   how:"チーズを混ぜ込み、はちみつを垂らしてにぎる。",
+   caution:"香りが強いので職場ランチには不向き。妊娠中の方はナチュラルチーズに注意。"},
+  {name:"パクチーマウンテンむすび", joke:true, color:"#5F9F5F", mood:["bouken","sappari"], taste:["suppai","karai"], nutri:["vitamin"],
+   desc:"米よりパクチーが多いのでは、という比率で攻めるパクチスト専用機。アンチには生物兵器。",
+   ing:"ごはん、パクチー(山盛り)、ナンプラー、レモン汁、砕きピーナッツ",
+   how:"刻みパクチーを限界まで混ぜ込み、表面にもまとわせる。",
+   caution:"パクチーが苦手な人に無言で渡さないこと。友情に関わります。"},
+  {name:"いちごジャムバターむすび", joke:true, color:"#E06A8A", mood:["bouken"], taste:["kotteri","suppai"], nutri:["energy"],
+   desc:"温かい米×いちごジャム×バター。「おはぎ理論」で考えれば成立するはずの甘味系実験作。",
+   ing:"温かいごはん、いちごジャム、バター、塩ひとつまみ",
+   how:"バターを溶かし混ぜ、ジャムを中央に入れてにぎる。",
+   caution:"おはぎだと思って食べるのが攻略法です。"},
+  {name:"あんバター小倉むすび", joke:true, color:"#8A4A5F", mood:["bouken","tsukare"], taste:["kotteri"], nutri:["energy"],
+   desc:"名古屋の小倉トースト理論を米に適用。粒あん×バター×塩むすび、実はかなり惜しいところまでいく。",
+   ing:"温かいごはん、粒あん、バター、塩",
+   how:"塩を強めにきかせてにぎり、あんバターを中央に。",
+   caution:"「おはぎでよくない?」という正論は禁止です。"},
+  {name:"チョコバナナ祭りむすび", joke:true, color:"#D9A85F", mood:["bouken"], taste:["kotteri"], nutri:["energy"],
+   desc:"縁日の人気者チョコバナナを米で包んだ問題作。エネルギー補給という点だけは完全に正しい。",
+   ing:"温かいごはん、バナナ(輪切り)、チョコソース、塩ひとつまみ",
+   how:"バナナを埋めてにぎり、チョコソースをかける。",
+   caution:"登山の行動食と言い張れば意外と理解を得られます。"},
+  {name:"プリン醤油のウニ風むすび", joke:true, color:"#E8C95F", mood:["bouken"], taste:["umami","kotteri"], nutri:["free"],
+   desc:"「プリン+醤油=ウニ」の都市伝説をおにぎりで検証する実験機。結果は各自の舌でご確認を。",
+   ing:"ごはん、プリン大さじ1、しょうゆ数滴、刻み海苔",
+   how:"プリン醤油を中央に忍ばせ、海苔を巻いて完全にウニ軍艦のふりをする。",
+   caution:"ウニではありません。期待値の管理をお願いします。"},
+  {name:"焼きマシュマロとろけるむすび", joke:true, color:"#EFDFD9", mood:["bouken"], taste:["kotteri"], nutri:["energy"],
+   desc:"炙ったマシュマロを具にしたキャンプ発想の甘味系。外は香ばしく中はとろり、米は困惑。",
+   ing:"ごはん、マシュマロ2個(炙る)、塩、きなこ(お好み)",
+   how:"炙ったマシュマロを素早く包んでにぎる。",
+   caution:"熱いうちのマシュマロは口内やけどの原因に。少し冷ましてから。"},
+  {name:"ラムネ菓子シュワシュワむすび", joke:true, color:"#AFCFEF", mood:["bouken"], taste:["suppai"], nutri:["energy"],
+   desc:"ラムネ菓子を仕込んだ口内清涼系トラップ。噛んだ瞬間、脳にブドウ糖が直送される。",
+   ing:"ごはん、ラムネ菓子3粒、塩",
+   how:"ラムネを散らして埋め込んでにぎる。勉強のお供と言い張れる。",
+   caution:"歯が弱い方は噛む位置にご注意ください。"},
+  {name:"わたあめ包みふわふわむすび", joke:true, color:"#EFD9EF", mood:["bouken"], taste:["kotteri"], nutri:["energy"],
+   desc:"おにぎりをわたあめで包む縁日の悪夢(夢)。触れた瞬間に溶けていく儚さも込みで作品。",
+   ing:"塩むすび、わたあめ",
+   how:"にぎった塩むすびを食べる直前にわたあめでふんわり包む。",
+   caution:"湿気で秒で溶けます。撮影はお早めに。"},
+  {name:"ハチミツレモン部活むすび", joke:true, color:"#EFDF7A", mood:["genki","bouken"], taste:["suppai"], nutri:["vitamin","energy"],
+   desc:"部活の差し入れの定番ハチミツレモンを米にIN。青春の味がする…かどうかは世代による。",
+   ing:"温かいごはん、はちみつレモン漬け(刻む)、塩",
+   how:"レモンを刻んで混ぜ込み、塩を強めににぎる。",
+   caution:"1歳未満のお子さまにはちみつはNGです。"},
+  {name:"練乳いちご恋味むすび", joke:true, color:"#EFAFC9", mood:["bouken"], taste:["kotteri","suppai"], nutri:["vitamin"],
+   desc:"いちご大福が許されるならこれも許されるはず、という理論武装済みのスイーツむすび。",
+   ing:"ごはん、いちご1粒、練乳、塩ひとつまみ",
+   how:"いちごを丸ごと包み、練乳をかける。もち米ならほぼいちご大福。",
+   caution:"いちご大福との違いを聞かれたら「米の形態」と答えましょう。"},
+  {name:"コーラ炊き込みシュワむすび", joke:true, color:"#6A4A3F", mood:["bouken"], taste:["kotteri","suppai"], nutri:["energy"],
+   desc:"コーラで米を炊く海外バズレシピの和訳版。カラメル風味の甘い米、照り焼きと合わせると意外な着地。",
+   ing:"米、コーラ(水の代わりに半量)、鶏照り焼き、白ごま",
+   how:"コーラ入りで炊いた米に照り焼きを混ぜてにぎる。",
+   caution:"糖分が多いので1個まで。ゼロカロリーコーラだと虚無の味になります。"},
+  {name:"メロンソーダ炊き緑米むすび", joke:true, color:"#7FDF9F", mood:["bouken"], taste:["suppai"], nutri:["energy"],
+   desc:"メロンソーダで炊いたエメラルドグリーンの米。喫茶店の夢とSFが混ざった色をしている。",
+   ing:"米、メロンソーダ(水の代わりに半量)、塩、さくらんぼ(飾り)",
+   how:"メロンソーダで炊いてにぎり、頂上にさくらんぼを。クリームソーダへの敬意を忘れずに。",
+   caution:"完全に見た目重視です。味の責任は負いかねます。"},
+  {name:"カップ麺バリカタクラッシュむすび", joke:true, color:"#D9B57A", mood:["gattsuri","bouken"], taste:["shio","kotteri"], nutri:["energy"],
+   desc:"砕いたカップ麺を戻さず混ぜる炭水化物の共食い。ザクザク食感とスープ粉のジャンクな暴力。",
+   ing:"温かいごはん、カップ麺(砕く)、付属スープ少々",
+   how:"砕いた麺とスープ粉を混ぜてにぎる。時間との勝負、即食べ推奨。",
+   caution:"スープ粉は入れすぎると塩分過多に。半分以下で十分です。"},
+  {name:"コーンスナック崩しむすび", joke:true, color:"#E8C97A", mood:["bouken","genki"], taste:["kotteri","shio"], nutri:["energy"],
+   desc:"サクサクのコーンスナックを砕いて混ぜたおやつ系ジャンクむすび。チーズ味を選ぶのが勝ち筋。",
+   ing:"温かいごはん、コーンスナック(砕く)、マヨ少々",
+   how:"食べる直前に砕いて混ぜてにぎる。しんなりする前に食べ切れ。",
+   caution:"カロリーのことは考えないお約束です。"},
+  {name:"和からし特盛ツーンむすび", joke:true, color:"#D9C93F", mood:["bouken"], taste:["karai"], nutri:["free"],
+   desc:"具が練りからしのみという鼻腔破壊系。おでん屋で鍛えた者だけが完食を許される。",
+   ing:"ごはん、練りからし、しょうゆ少々、焼き海苔",
+   how:"からし醤油を中央に。量は小さじ1/4から始めるのが人道的。",
+   caution:"ツーンと来たら鼻から息を吐くと和らぎます。無理は禁物。"},
+  {name:"タバスコレイントッピングむすび", joke:true, color:"#D9503F", mood:["bouken","gattsuri"], taste:["karai","suppai"], nutri:["free"],
+   desc:"タバスコを雨のように降らせた酸っぱ辛い雨天決行むすび。ピザ用調味料の意外な転職先。",
+   ing:"ごはん、ツナマヨ、タバスコ、粉チーズ",
+   how:"ツナマヨむすびにタバスコを回しかけ、粉チーズをふる。",
+   caution:"かけすぎ注意。胃腸が弱い日は延期してください。"},
+  {name:"ハバネロ限界突破むすび", joke:true, color:"#E0602F", mood:["bouken"], taste:["karai"], nutri:["free"],
+   desc:"ハバネロパウダーを纏った激辛耐久チャレンジ機。辛さの向こう側に何があるかは君の目で確かめよう。",
+   ing:"ごはん、ハバネロパウダー少々、チーズ、マヨネーズ",
+   how:"チーズマヨを具に、表面にパウダーを薄く。乳製品が唯一の救済措置。",
+   caution:"激辛が苦手な方・体調不良時はNG。手で目をこすらないこと。牛乳の常備を。"},
+  {name:"ラー油底なし沼むすび", joke:true, color:"#C0402F", mood:["gattsuri","bouken"], taste:["karai","kotteri"], nutri:["free"],
+   desc:"食べるラー油を「もう入らない」まで混ぜた沼系。ザクザクにんにくの中毒性は説明不要。",
+   ing:"温かいごはん、食べるラー油大さじ2、白ごま、小ねぎ",
+   how:"限界までラー油を混ぜてにぎる。手がすべるのでラップ必須。",
+   caution:"油分と塩分が強烈なので1個まで。翌日の口臭は自己責任で。"},
+  {name:"山椒しびれMAXむすび", joke:true, color:"#7F8A3F", mood:["bouken"], taste:["karai"], nutri:["free"],
+   desc:"花椒を限界まで効かせた麻(マー)全振りむすび。唇の存在を見失う新感覚をあなたに。",
+   ing:"ごはん、花椒(挽きたて)、ごま油、塩、ザーサイ",
+   how:"花椒油を混ぜ込み、仕上げに追い花椒。唇のしびれは正常な反応です。",
+   caution:"少量から試してください。しびれが引くまで熱いものは飲まないこと。"},
+  {name:"竹炭ブラックホールむすび", joke:true, color:"#2F2F2F", mood:["bouken"], taste:["shio"], nutri:["free"],
+   desc:"食用竹炭パウダーで米を漆黒に染めた闇の物体。味は普通の塩むすびなのが逆に怖い。",
+   ing:"温かいごはん、食用竹炭パウダー少々、塩、白ごま(星に見立てる)",
+   how:"竹炭を混ぜて真っ黒にし、白ごまを散らして宇宙を表現。",
+   caution:"必ず食用グレードの竹炭を。摂りすぎ注意、少量で十分真っ黒です。"},
+  {name:"金箔セレブ光臨むすび", joke:true, color:"#E8C93F", mood:["bouken","genki"], taste:["shio"], nutri:["free"],
+   desc:"食用金箔を貼った時価数百円のセレブむすび。味は変わらないのに気分は数万円。",
+   ing:"塩むすび、食用金箔、いくら(さらに盛るなら)",
+   how:"にぎった塩むすびに金箔をピンセットでそっと。息を止めて作業せよ。",
+   caution:"金箔は無味です。財布と相談の上、食用グレードを使用してください。"},
+  {name:"エディブルフラワー花畑むすび", joke:true, color:"#EFAFDF", mood:["bouken","sappari"], taste:["shio"], nutri:["vitamin"],
+   desc:"食用花を散らした映え極振りのお花畑むすび。SNSのいいねと引き換えに食べる勇気を試される。",
+   ing:"塩むすび、エディブルフラワー、甘酢少々",
+   how:"にぎった表面に花びらを貼り付ける。逆光で撮ると神々しい。",
+   caution:"必ず食用花を。観賞用の花は農薬の恐れがあるので絶対NG。"},
+  {name:"バタフライピー真っ青むすび", joke:true, color:"#4F6FDF", mood:["bouken"], taste:["shio"], nutri:["free"],
+   desc:"バタフライピーで米を空色に染めた食欲理論破壊系。レモンをかけると紫に変色する理科実験付き。",
+   ing:"米、バタフライピーティー(水の代わり)、塩、レモン汁(実験用)",
+   how:"青いお茶で炊いてにぎる。食べる前にレモンで変色ショーを開催。",
+   caution:"味はほぼ普通です。青い米への心の準備だけしておいてください。"},
+  {name:"ビーツ真紅のむすび", joke:true, color:"#C02F5F", mood:["bouken","genki"], taste:["umami"], nutri:["vitamin"],
+   desc:"「飲む輸血」ことビーツで米をショッキングピンクに。栄養は本物、見た目は事件。",
+   ing:"米、ビーツ(すりおろし)、塩、クリームチーズ",
+   how:"ビーツと一緒に炊いてにぎる。クリチを添えるとボルシチ風味。",
+   caution:"手やまな板が染まります。翌日のお手洗いで驚かないこと(ビーツは色が出ます)。"},
+  {name:"1kgメガトンむすび", joke:true, color:"#EFEADF", mood:["gattsuri","bouken"], taste:["shio"], nutri:["energy"],
+   desc:"米1kg(茶碗約6杯分)を一つににぎった物理で殴る系。両手で抱えて食べる姿はもはや儀式。",
+   ing:"ごはん1kg、塩、具材お好みで3種類、海苔全形2枚",
+   how:"ラップを二重にして体重をかけてにぎる。具を3か所に配置すると飽きない設計に。",
+   caution:"一人で完食しようとしないこと。シェア前提のパーティー用です。"},
+  {name:"米3粒ミニマルむすび", joke:true, color:"#EFEADF", mood:["bouken"], taste:["shio"], nutri:["free"],
+   desc:"米3粒を海苔0.5cm角で巻いた世界最小クラスのおにぎり。ピンセットでにぎる禅の境地。",
+   ing:"米3粒、塩(結晶1個)、海苔(極小)",
+   how:"ピンセットと爪楊枝で成形。完成品はルーペで鑑賞してから食す。",
+   caution:"満腹感はゼロです。制作時間30分に対して食事時間0.5秒。"},
+  {name:"逆転インサイドアウトむすび", joke:true, color:"#EF8A5F", mood:["bouken"], taste:["umami"], nutri:["protein"],
+   desc:"鮭フレークの塊を外側に、米を内側にした発想の逆転。にぎれるかどうかからが勝負。",
+   ing:"ごはん(小さめ)、鮭フレーク大量、片栗粉少々",
+   how:"小さくにぎった米に鮭フレークを圧着させる。焼くと固まって成功率UP。",
+   caution:"塩分がすごいことになるので、中の米は無塩で。"},
+  {name:"海苔100%ノーライスむすび", joke:true, color:"#1F2A1F", mood:["bouken","sappari"], taste:["shio","umami"], nutri:["fiber","vitamin"],
+   desc:"米を使わず海苔だけで三角形を折り上げた糖質制限の極北。もはやおにぎりの概念への問いかけ。",
+   ing:"焼き海苔10枚、わさび醤油(つけだれ)",
+   how:"海苔を重ねて三角に折り畳む。折り紙の技術が味を左右する。",
+   caution:"これはおにぎりなのか、という哲学的問いには各自で答えを出してください。"},
+  {name:"おにぎりinおにぎりむすび", joke:true, color:"#EFEADF", mood:["bouken","gattsuri"], taste:["shio"], nutri:["energy"],
+   desc:"小さな塩むすびを具にした巨大おにぎりのマトリョーシカ構造。掘り進めると米から米が出る。",
+   ing:"ごはん(大小2回分)、塩、海苔2枚、中心用の梅干し1個",
+   how:"梅入りミニむすびを作り、それを具にして大きくにぎる。最深部に梅という設計。",
+   caution:"炭水化物の総量から目を逸らさないでください。"},
+  {name:"昨日のカレー全部のせむすび", joke:true, color:"#B5793A", mood:["gattsuri","bouken"], taste:["karai","kotteri"], nutri:["energy","protein"],
+   desc:"一晩寝かせたカレーを煮詰めて具にした翌日の正解。じゃがいもごと入れる豪快さが本体。",
+   ing:"ごはん、残りカレー(煮詰める)、チーズ、福神漬け",
+   how:"限界まで煮詰めたカレーとチーズを包んで焼きおにぎりに。",
+   caution:"カレーの保存は必ず冷蔵で。よく再加熱してから使ってください。"},
+  {name:"餃子まるごとインむすび", joke:true, color:"#D9B58A", mood:["gattsuri","bouken"], taste:["umami","kotteri"], nutri:["protein","energy"],
+   desc:"焼き餃子を丸ごと1個埋め込んだ主食×主食の共犯関係。ラー油醤油を垂らせば完全犯罪。",
+   ing:"ごはん、焼き餃子1個、酢醤油ラー油少々",
+   how:"たれをくぐらせた餃子を中央に埋めてにぎる。",
+   caution:"餃子定食で白飯を頼む文化圏では合法です。"},
+  {name:"たこ焼き埋蔵大阪むすび", joke:true, color:"#C9793F", mood:["gattsuri","bouken"], taste:["kotteri","umami"], nutri:["energy"],
+   desc:"たこ焼きを丸ごと埋めた粉もん×米の禁断合体。ソースマヨが米に染みた部分が最高うまい。",
+   ing:"ごはん、たこ焼き1個、ソース、マヨネーズ、青のり",
+   how:"たこ焼きを中央に埋め、表面にソースマヨ青のりで化粧。",
+   caution:"大阪の方に見せる際は敬意を忘れずに。"},
+];
+
+// ===== 状態 =====
+const state = { mood:null, taste:null, nutri:null, joke:true };
+let lastPool = null;
+
+function renderOpts(elId, items, key){
+  const el = document.getElementById(elId);
+  items.forEach(it=>{
+    const b = document.createElement("button");
+    b.className = "opt"; b.textContent = it.label; b.type = "button";
+    b.setAttribute("aria-pressed","false");
+    b.onclick = ()=>{
+      state[key] = it.id;
+      [...el.children].forEach(c=>{ c.classList.remove("on"); c.setAttribute("aria-pressed","false"); });
+      b.classList.add("on"); b.setAttribute("aria-pressed","true");
+    };
+    el.appendChild(b);
+  });
+}
+renderOpts("q-mood", MOODS, "mood");
+renderOpts("q-taste", TASTES, "taste");
+renderOpts("q-nutri", NUTRIS, "nutri");
+
+const jOn = document.getElementById("joke-on"), jOff = document.getElementById("joke-off");
+jOn.onclick = ()=>{ state.joke = true; jOn.classList.add("on"); jOff.classList.remove("on"); jOn.setAttribute("aria-pressed","true"); jOff.setAttribute("aria-pressed","false"); };
+jOff.onclick = ()=>{ state.joke = false; jOff.classList.add("on"); jOn.classList.remove("on"); jOff.setAttribute("aria-pressed","true"); jOn.setAttribute("aria-pressed","false"); };
+
+// ===== マッチング =====
+function score(r){
+  let s = 0;
+  if (state.mood  && r.mood.includes(state.mood))   s += 3;
+  if (state.taste && r.taste.includes(state.taste)) s += 3;
+  if (state.nutri === "free") s += 1;
+  else if (state.nutri && r.nutri.includes(state.nutri)) s += 2;
+  return s;
+}
+
+function pickRecipes(){
+  const pool = RECIPES.filter(r=> state.joke || !r.joke)
+    .map(r=>({r, s: score(r) + Math.random()*0.9})) // 同点はランダムで揺らす
+    .sort((a,b)=> b.s - a.s);
+
+  const picks = [];
+  // まじめ枠から上位2つ
+  for (const p of pool){ if (!p.r.joke && picks.length < 2) picks.push(p.r); }
+  // 面白ONなら最上位の面白レシピを必ず1枠混入
+  if (state.joke){
+    const j = pool.find(p=> p.r.joke);
+    if (j) picks.push(j.r);
+  } else {
+    const third = pool.find(p=> !picks.includes(p.r) && !p.r.joke);
+    if (third) picks.push(third.r);
+  }
+  return picks;
+}
+
+// ===== おにぎりSVG =====
+function oniSvg(color, joke){
+  const face = joke
+    ? `<text x="60" y="66" font-size="16" text-anchor="middle">✕ ✕</text>
+       <path d="M52 78 q8 -7 16 0" stroke="#262D22" stroke-width="3" fill="none" stroke-linecap="round"/>`
+    : `<circle cx="48" cy="60" r="3.4" fill="#262D22"/><circle cx="72" cy="60" r="3.4" fill="#262D22"/>
+       <path d="M52 72 q8 7 16 0" stroke="#262D22" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  return `<svg class="oni-svg" viewBox="0 0 120 120" role="img" aria-label="おにぎりのイラスト">
+    <path d="M60 12 C68 12 72 18 80 30 L102 66 C108 76 104 88 92 90 C72 94 48 94 28 90 C16 88 12 76 18 66 L40 30 C48 18 52 12 60 12 Z"
+      fill="#FDFBF4" stroke="#262D22" stroke-width="4"/>
+    <ellipse cx="60" cy="42" rx="13" ry="9" fill="${color}"/>
+    <rect x="42" y="86" width="36" height="22" rx="4" fill="#262D22"/>
+    ${face}
+    ${joke ? `<text x="96" y="30" font-size="18">💦</text>` : `<text x="94" y="28" font-size="16">✨</text>`}
+  </svg>`;
+}
+
+// ===== 結果描画 =====
+const NUTRI_LABEL = Object.fromEntries(NUTRIS.map(n=>[n.id,n.label]));
+const MOOD_LABEL  = Object.fromEntries(MOODS.map(m=>[m.id,m.label]));
+const TASTE_LABEL = Object.fromEntries(TASTES.map(t=>[t.id,t.label]));
+let currentPicks = [];
+
+function conditionText(){
+  const parts = [];
+  if (state.mood)  parts.push(`気分「${MOOD_LABEL[state.mood]}」`);
+  if (state.taste) parts.push(`味「${TASTE_LABEL[state.taste]}」`);
+  if (state.nutri) parts.push(`栄養「${NUTRI_LABEL[state.nutri]}」`);
+  return parts.join(" × ");
+}
+
+function buildShareText(recipe){
+  const cond = conditionText();
+  if (recipe){
+    return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私に処方されたのは…\n" : ""}${recipe.joke ? "⚠攻めレシピ " : ""}「${recipe.name}」\n${recipe.desc}\n#おにぎり処方箋`;
+  }
+  const lines = currentPicks.map((r,i)=> `${["①","②","③"][i]||"・"}${r.joke?"⚠":""}${r.name}`).join("\n");
+  return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私への処方は…\n" : "本日の処方は…\n"}${lines}\n#おにぎり処方箋`;
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove("show"), 2200);
+}
+
+async function doShare(text){
+  if (navigator.share){
+    try { await navigator.share({ text }); return; }
+    catch(e){ if (e.name === "AbortError") return; }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("📋 シェア文をコピーしました!");
+  } catch(e){
+    // クリップボードも使えない環境向けの最終手段
+    window.prompt("以下をコピーしてシェアしてください", text);
+  }
+}
+
+function shareToX(text){
+  const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+  window.open(url, "_blank", "noopener");
+}
+
+function render(picks){
+  currentPicks = picks;
+  const box = document.getElementById("result");
+  if (!picks.length){
+    box.innerHTML = `<p class="empty">条件に合うおにぎりが見つかりませんでした…条件を変えてもう一度どうぞ。</p>`;
+    return;
+  }
+  const cards = picks.map((r,i)=>{
+    const tags = [
+      i===0 ? `<span class="tag" style="background:var(--tamago);color:#262D22">本日の処方</span>` : "",
+      r.joke ? `<span class="tag warn">⚠ 攻めレシピ</span>` : "",
+      ...r.nutri.filter(n=>n!=="free").map(n=>`<span class="tag">${NUTRI_LABEL[n]||n}</span>`)
+    ].join("");
+    return `<article class="recipe ${r.joke?"joke":""}">
+      ${oniSvg(r.color, r.joke)}
+      <div class="r-body">
+        <h3>${r.name}</h3>
+        <div class="r-tags">${tags}</div>
+        <p class="desc">${r.desc}</p>
+        <div class="ing"><strong>材料</strong>${r.ing}</div>
+        <p class="howto">🍙 ${r.how}</p>
+        ${r.caution ? `<p class="caution">⚠ ${r.caution}</p>` : ""}
+        <div class="r-share">
+          <button class="share-btn" data-share="${i}">📤 このレシピをシェア</button>
+          <button class="share-btn x" data-x="${i}">𝕏 ポスト</button>
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+  box.innerHTML = `<div class="result-head"><h2>本日の処方箋</h2></div>${cards}
+    <button class="again" id="again">🎲 もう一回にぎる</button>
+    <div class="share-bar">
+      <button class="share-btn" id="share-all">📤 処方箋まるごとシェア</button>
+      <button class="share-btn x" id="share-all-x">𝕏 結果をポスト</button>
+    </div>`;
+  document.getElementById("again").onclick = ()=> render(pickRecipes());
+  document.getElementById("share-all").onclick = ()=> doShare(buildShareText(null));
+  document.getElementById("share-all-x").onclick = ()=> shareToX(buildShareText(null));
+  box.querySelectorAll("[data-share]").forEach(b=>{
+    b.onclick = ()=> doShare(buildShareText(picks[+b.dataset.share]));
+  });
+  box.querySelectorAll("[data-x]").forEach(b=>{
+    b.onclick = ()=> shareToX(buildShareText(picks[+b.dataset.x]));
+  });
+  box.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+document.getElementById("go").onclick = ()=>{
+  if (!state.mood && !state.taste && !state.nutri){
+    alert("どれかひとつでいいので、気分・味・栄養を選んでください🍙");
+    return;
+  }
+  render(pickRecipes());
+};
+</script>
+</body>
+</html>
