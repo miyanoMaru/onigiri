@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>おにぎり処方箋 🍙</title>
+<meta name="description" content="気分・味・栄養を選ぶだけで、220種からぴったりのおにぎりレシピを調合。サプリやゲテモノ入りの「攻めレシピ」の混入も選べます。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://miyanomaru.github.io/onigiri/">
+<meta property="og:title" content="おにぎり処方箋 🍙">
+<meta property="og:description" content="気分・味・栄養を選ぶだけで、220種からぴったりのおにぎりレシピを調合。サプリやゲテモノ入りの「攻めレシピ」の混入も選べます。">
+<meta property="og:image" content="https://miyanomaru.github.io/onigiri/ogimage.png">
+<meta property="og:site_name" content="おにぎり処方箋">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="おにぎり処方箋 🍙">
+<meta name="twitter:description" content="気分・味・栄養を選ぶだけで、220種からぴったりのおにぎりレシピを調合。攻めレシピの混入も選べます。">
+<meta name="twitter:image" content="https://miyanomaru.github.io/onigiri/ogimage.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -1319,13 +1330,15 @@ function conditionText(){
   return parts.join(" × ");
 }
 
+const APP_URL = "https://miyanomaru.github.io/onigiri/";
+
 function buildShareText(recipe){
   const cond = conditionText();
   if (recipe){
-    return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私に処方されたのは…\n" : ""}${recipe.joke ? "⚠攻めレシピ " : ""}「${recipe.name}」\n${recipe.desc}\n#おにぎり処方箋`;
+    return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私に処方されたのは…\n" : ""}${recipe.joke ? "⚠攻めレシピ " : ""}「${recipe.name}」\n${recipe.desc}\n#おにぎり処方箋\n${APP_URL}`;
   }
   const lines = currentPicks.map((r,i)=> `${["①","②","③"][i]||"・"}${r.joke?"⚠":""}${r.name}`).join("\n");
-  return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私への処方は…\n" : "本日の処方は…\n"}${lines}\n#おにぎり処方箋`;
+  return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私への処方は…\n" : "本日の処方は…\n"}${lines}\n#おにぎり処方箋\n${APP_URL}`;
 }
 
 function showToast(msg){
