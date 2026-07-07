@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おにぎり選び所</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
+
+:root{
+  --paper:#E7E4D6;
+  --paper-deep:#DAD6C4;
+  --card:#F8F6EC;
+  --ink:#211E19;
+  --ink-soft:#5E5A4C;
+  --nori:#1B241D;
+  --nori-soft:#2E3B31;
+  --ume:#AE3830;
+  --ume-deep:#872B25;
+  --matcha:#6C7C4C;
+  --egg:#D89B34;
+  --line:#CFC9B4;
+  --white:#FFFDF7;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, transparent 1px, transparent 3px);
+  color:var(--ink);
+  font-family:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif;
+  line-height:1.65;
+  min-height:100%;
+}
+.wrap{max-width:900px;margin:0 auto;padding:0 0 64px;}
+
+/* ---------- header / noren ---------- */
+.noren{
+  background:var(--nori);
+  color:var(--white);
+  padding:38px 24px 30px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.noren::after{
+  content:"";
+  position:absolute;left:0;right:0;bottom:0;height:8px;
+  background:repeating-linear-gradient(90deg,var(--ume) 0 26px, transparent 26px 40px);
+  opacity:.9;
+}
+.noren h1{
+  font-family:'Shippori Mincho B1',serif;
+  font-weight:800;
+  font-size:clamp(28px,5vw,42px);
+  letter-spacing:.08em;
+  margin:0 0 10px;
+}
+.noren p{
+  margin:0;
+  font-size:14px;
+  letter-spacing:.12em;
+  color:#D8D6C8;
+}
+.noren .tri{color:var(--egg);}
+
+/* ---------- ticket (order form) ---------- */
+.ticket{
+  background:var(--card);
+  margin:-18px 16px 0;
+  border:1px solid var(--line);
+  box-shadow:0 10px 24px rgba(0,0,0,.12);
+  position:relative;
+  z-index:2;
+}
+.step{
+  padding:22px 24px;
+  border-top:2px dashed var(--line);
+}
+.step:first-of-type{border-top:none;}
+.step-head{
+  display:flex;align-items:baseline;gap:10px;margin-bottom:14px;
+}
+.step-num{
+  font-family:'Shippori Mincho B1',serif;
+  font-size:22px;font-weight:800;color:var(--ume);
+  min-width:28px;
+}
+.step-title{
+  font-family:'Shippori Mincho B1',serif;
+  font-size:17px;font-weight:700;color:var(--ink);
+}
+.step-sub{font-size:12px;color:var(--ink-soft);margin-left:auto;white-space:nowrap;}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border:1px solid var(--line);background:var(--white);
+  color:var(--ink);font-size:13.5px;font-weight:500;cursor:pointer;
+  border-radius:3px;transition:background .15s,color .15s,border-color .15s,transform .1s;
+  font-family:inherit;
+}
+.chip .tri{font-size:10px;color:var(--line);transition:color .15s;}
+.chip:hover{border-color:var(--ume);}
+.chip:active{transform:translateY(1px);}
+.chip[aria-pressed="true"]{
+  background:var(--ume);color:var(--white);border-color:var(--ume-deep);
+}
+.chip[aria-pressed="true"] .tri{color:var(--egg);}
+.chip:focus-visible{outline:2px solid var(--matcha);outline-offset:2px;}
+
+/* mood/flavor/nutrition color accents on selected tri */
+.chip.mood[aria-pressed="true"] .tri{color:var(--egg);}
+.chip.flavor[aria-pressed="true"] .tri{color:#F2D9B0;}
+.chip.nutri[aria-pressed="true"] .tri{color:#CFE0B0;}
+
+/* bonus toggle row */
+.bonus{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  background:var(--paper-deep);
+  padding:16px 24px;border-top:2px dashed var(--line);flex-wrap:wrap;
+}
+.bonus-label{font-size:13.5px;font-weight:700;color:var(--ink);}
+.bonus-desc{font-size:12px;color:var(--ink-soft);margin-top:3px;max-width:520px;}
+.switch{
+  display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;flex-shrink:0;
+}
+.switch input{position:absolute;opacity:0;width:1px;height:1px;}
+.switch .track{
+  width:52px;height:28px;background:var(--white);border:1px solid var(--line);
+  border-radius:2px;position:relative;transition:background .15s,border-color .15s;
+}
+.switch .thumb{
+  position:absolute;top:2px;left:2px;width:22px;height:22px;
+  background:var(--ink-soft);clip-path:polygon(50% 0%,100% 100%,0% 100%);
+  transition:left .18s ease,background .18s;
+}
+.switch input:checked + .track{background:var(--ume);border-color:var(--ume-deep);}
+.switch input:checked + .track .thumb{left:26px;background:var(--egg);}
+.switch input:focus-visible + .track{outline:2px solid var(--matcha);outline-offset:2px;}
+.switch .state-text{font-size:12px;font-weight:700;color:var(--ink-soft);min-width:34px;}
+
+.actions{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:20px 24px 24px;flex-wrap:wrap;
+}
+.reset-link{
+  font-size:12.5px;color:var(--ink-soft);background:none;border:none;cursor:pointer;
+  text-decoration:underline;padding:4px;font-family:inherit;
+}
+.reset-link:focus-visible{outline:2px solid var(--matcha);}
+.cta{
+  font-family:'Shippori Mincho B1',serif;
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--ume);color:var(--white);border:none;
+  padding:15px 26px;font-size:16px;font-weight:800;letter-spacing:.05em;
+  cursor:pointer;border-radius:3px;box-shadow:0 4px 0 var(--ume-deep);
+  transition:transform .08s;
+}
+.cta:hover{background:var(--ume-deep);}
+.cta:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ume-deep);}
+.cta:focus-visible{outline:2px solid var(--matcha);outline-offset:3px;}
+.cta .tri-icon{font-size:14px;color:var(--egg);}
+
+/* ---------- results ---------- */
+.results{padding:30px 16px 0;}
+.result-msg{
+  text-align:center;font-size:13.5px;color:var(--ink-soft);margin:0 0 22px;
+  letter-spacing:.03em;
+}
+.result-msg strong{color:var(--ume);font-size:15px;}
+
+/* featured card */
+.featured{
+  position:relative;background:var(--card);
+  border:1px solid var(--line);box-shadow:0 12px 26px rgba(0,0,0,.13);
+  margin:0 0 30px;padding:34px 26px 26px;
+  animation:unfold .38s ease;
+}
+@keyframes unfold{from{opacity:0;transform:translateY(10px) scale(.985);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.featured{animation:none;}}
+
+.ribbon{
+  position:absolute;top:0;left:0;width:64px;height:64px;
+  background:var(--nori);
+  clip-path:polygon(0 0,100% 0,0 100%);
+}
+.ribbon .tri-icon{
+  position:absolute;top:10px;left:8px;color:var(--egg);font-size:15px;
+}
+.stamp{
+  position:absolute;top:16px;right:20px;width:88px;height:88px;
+  border:3px double var(--ume);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  transform:rotate(-11deg);color:var(--ume);
+  font-size:12.5px;font-weight:900;line-height:1.25;letter-spacing:.04em;
+  opacity:.88;background:rgba(174,56,48,0.03);
+}
+.eyebrow{
+  font-size:11.5px;letter-spacing:.18em;color:var(--matcha);font-weight:700;margin:0 0 6px 74px;
+}
+.featured.is-funny .eyebrow{color:var(--ume);}
+.f-name{
+  font-family:'Shippori Mincho B1',serif;font-weight:800;
+  font-size:clamp(22px,4vw,28px);margin:0 0 10px 74px;color:var(--ink);
+}
+@media (max-width:520px){
+  .ribbon{width:52px;height:52px;}
+  .eyebrow,.f-name{margin-left:60px;}
+  .stamp{width:72px;height:72px;font-size:11px;top:10px;right:12px;}
+}
+.f-point{font-size:14px;color:var(--ink-soft);margin:0 0 16px;}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.tag{
+  font-size:11.5px;padding:4px 9px;border-radius:2px;font-weight:700;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.tag.mood{background:#F1E6C8;color:#8A5E15;}
+.tag.flavor{background:#F1D9D2;color:var(--ume-deep);}
+.tag.nutri{background:#E4EAD4;color:#4C5A32;}
+
+.ing-block{
+  background:var(--white);border:1px solid var(--line);padding:14px 16px;margin-bottom:10px;
+}
+.ing-block h4{
+  margin:0 0 8px;font-size:12px;letter-spacing:.1em;color:var(--ink-soft);font-weight:700;
+}
+.ing-list{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;}
+.ing-list li{
+  font-size:13px;background:var(--paper-deep);padding:4px 10px;border-radius:2px;color:var(--ink);
+}
+.match{
+  display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;
+}
+.match .tri{font-size:12px;color:var(--line);}
+.match .tri.on{color:var(--ume);}
+.gete-level{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ume-deep);margin-bottom:6px;font-weight:700;}
+.gete-level .tri{font-size:12px;color:var(--line);}
+.gete-level .tri.on{color:var(--ume);}
+.caution{
+  font-size:11.5px;color:var(--ink-soft);font-style:italic;border-top:1px dashed var(--line);
+  padding-top:10px;margin-top:6px;
+}
+
+/* candidate grid */
+.grid-label{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin:0 0 12px;letter-spacing:.05em;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:8px;}
+.cand{
+  background:var(--card);border:1px solid var(--line);padding:14px 14px 12px;cursor:pointer;
+  text-align:left;font-family:inherit;position:relative;transition:border-color .15s,transform .1s;
+}
+.cand:hover{border-color:var(--ume);}
+.cand:active{transform:translateY(1px);}
+.cand:focus-visible{outline:2px solid var(--matcha);outline-offset:2px;}
+.cand.is-funny{border-style:dashed;}
+.cand .corner{
+  position:absolute;top:0;left:0;width:22px;height:22px;background:var(--nori);
+  clip-path:polygon(0 0,100% 0,0 100%);
+}
+.cand.is-funny .corner{background:var(--ume);}
+.cand-name{font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:15px;margin:6px 0 6px 4px;}
+.cand-point{font-size:12px;color:var(--ink-soft);margin:0 0 8px 4px;min-height:2.6em;}
+.cand-tags{display:flex;flex-wrap:wrap;gap:4px;margin-left:4px;}
+.cand-tags .tag{font-size:10px;padding:2px 6px;}
+
+.footnote{
+  max-width:640px;margin:36px auto 0;padding:0 20px;font-size:11.5px;color:var(--ink-soft);
+  text-align:center;line-height:1.8;
+}
+.footnote b{color:var(--ink);}
+</style>
+</head>
+<body>
+
+<div class="noren">
+  <h1><span class="tri">▲</span> おにぎり選び所</h1>
+  <p>今日の気分・味・栄養から、あなたのおにぎりをおすすめします</p>
+</div>
+
+<div class="wrap">
+  <div class="ticket">
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">一</span>
+        <span class="step-title">今日の気分は?</span>
+        <span class="step-sub">1つ選ぶ</span>
+      </div>
+      <div class="chips" id="moodChips"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">二</span>
+        <span class="step-title">食べたい味は?</span>
+        <span class="step-sub">1つ選ぶ</span>
+      </div>
+      <div class="chips" id="flavorChips"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">三</span>
+        <span class="step-title">欲しい栄養は?</span>
+        <span class="step-sub">1つ選ぶ</span>
+      </div>
+      <div class="chips" id="nutriChips"></div>
+    </div>
+
+    <div class="bonus">
+      <div>
+        <div class="bonus-label">番外編：面白レシピ(サプリ・ゲテモノ系)</div>
+        <div class="bonus-desc">サプリメントや珍しい食材を使った実験的なレシピも候補に含めます。オフにすると定番レシピだけになります。</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="funnyToggle" checked>
+        <span class="track"><span class="thumb"></span></span>
+        <span class="state-text" id="funnyState">含める</span>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="reset-link" id="resetBtn" type="button">条件をリセット</button>
+      <button class="cta" id="ctaBtn" type="button"><span class="tri-icon">▲</span>おにぎりを選んでもらう</button>
+    </div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <div class="footnote">
+    <b>ご利用にあたって：</b>面白レシピは食の好奇心を楽しむための実験的な提案です。サプリメント類は必ず各商品の摂取上限・使用方法を守り、体質やアレルギーに合わせて量を調整してください。栄養に関する専門的な助言が必要な場合は、医師や栄養士にご相談ください。
+  </div>
+</div>
+
+<script>
+const MOODS = [
+  {key:'mood_genki', label:'元気になりたい'},
+  {key:'mood_hokkori', label:'ほっこりしたい'},
+  {key:'mood_sappari', label:'さっぱりしたい'},
+  {key:'mood_gatsuri', label:'がっつり食べたい'},
+  {key:'mood_iyashi', label:'癒されたい'},
+  {key:'mood_challenge', label:'刺激が欲しい'},
+];
+const FLAVORS = [
+  {key:'flavor_amai', label:'甘め'},
+  {key:'flavor_karai', label:'辛め'},
+  {key:'flavor_sanmi', label:'酸味'},
+  {key:'flavor_shoppai', label:'しょっぱい'},
+  {key:'flavor_kotteri', label:'こってり'},
+  {key:'flavor_sappari', label:'さっぱり'},
+];
+const NUTRITION = [
+  {key:'nutri_protein', label:'タンパク質'},
+  {key:'nutri_fiber', label:'食物繊維'},
+  {key:'nutri_vitamin', label:'ビタミン'},
+  {key:'nutri_mineral', label:'ミネラル'},
+  {key:'nutri_lowcal', label:'低カロリー'},
+  {key:'nutri_carb', label:'炭水化物'},
+];
+const LABELMAP = {};
+[...MOODS,...FLAVORS,...NUTRITION].forEach(t=>LABELMAP[t.key]=t.label);
+
+const RECIPES = [
+  {id:1,name:'梅おにぎり',point:'定番の酸味でリフレッシュ。塩気を効かせて夏バテ対策にも。',ing:['ご飯','梅干し','塩','海苔'],moods:['mood_sappari'],flavors:['flavor_sanmi','flavor_shoppai'],nutrition:['nutri_vitamin']},
+  {id:2,name:'鮭おにぎり',point:'焼き鮭フレークの旨味でしっかり満足。お弁当の主役格。',ing:['ご飯','焼き鮭フレーク','塩','海苔'],moods:['mood_genki'],flavors:['flavor_shoppai'],nutrition:['nutri_protein']},
+  {id:3,name:'昆布おにぎり',point:'佃煮の甘辛い味わいでほっと落ち着く一品。',ing:['ご飯','昆布の佃煮','海苔'],moods:['mood_hokkori'],flavors:['flavor_shoppai'],nutrition:['nutri_mineral']},
+  {id:4,name:'ツナマヨおにぎり',point:'まろやかでクセになる王道こってり系。',ing:['ご飯','ツナ','マヨネーズ','醤油少々','海苔'],moods:['mood_gatsuri'],flavors:['flavor_kotteri'],nutrition:['nutri_protein']},
+  {id:5,name:'おかかおにぎり',point:'削り節と醤油だけのシンプルな旨味。',ing:['ご飯','おかか','醤油','海苔'],moods:['mood_hokkori'],flavors:['flavor_shoppai'],nutrition:['nutri_protein']},
+  {id:6,name:'明太子おにぎり',point:'ピリッとした辛味で食欲がわく人気者。',ing:['ご飯','明太子','海苔'],moods:['mood_genki'],flavors:['flavor_karai','flavor_shoppai'],nutrition:['nutri_vitamin']},
+  {id:7,name:'塩むすび',point:'米の甘みを味わうための引き算レシピ。',ing:['ご飯','塩','海苔(お好みで)'],moods:['mood_hokkori'],flavors:['flavor_shoppai'],nutrition:['nutri_carb']},
+  {id:8,name:'焼きおにぎり(醤油)',point:'表面カリッと、香ばしい醤油の焦げが食欲を刺激。',ing:['ご飯','醤油','ごま油少々'],moods:['mood_gatsuri'],flavors:['flavor_shoppai','flavor_kotteri'],nutrition:['nutri_carb']},
+  {id:9,name:'高菜おにぎり',point:'漬物のシャキシャキ感とごまの香りが好相性。',ing:['ご飯','高菜漬け','ごま','海苔'],moods:['mood_hokkori'],flavors:['flavor_shoppai'],nutrition:['nutri_fiber']},
+  {id:10,name:'たらこおにぎり',point:'ぷちぷち食感と塩気で箸が止まらない。',ing:['ご飯','たらこ','海苔'],moods:['mood_genki'],flavors:['flavor_shoppai'],nutrition:['nutri_protein']},
+  {id:11,name:'鶏五目おにぎり',point:'炊き込みご飯そのままの満足感。',ing:['ご飯','鶏五目の素','海苔'],moods:['mood_gatsuri'],flavors:['flavor_kotteri','flavor_shoppai'],nutrition:['nutri_protein']},
+  {id:12,name:'枝豆塩おにぎり',point:'塩茹で枝豆の軽やかな食感で口さっぱり。',ing:['ご飯','枝豆','塩'],moods:['mood_sappari'],flavors:['flavor_sappari','flavor_shoppai'],nutrition:['nutri_fiber']},
+  {id:13,name:'チーズおかかおにぎり',point:'とろけるチーズとおかかの濃厚コンビ。',ing:['ご飯','おかか','プロセスチーズ','醤油'],moods:['mood_gatsuri'],flavors:['flavor_kotteri'],nutrition:['nutri_protein']},
+  {id:14,name:'キムチおにぎり',point:'発酵の旨味とピリ辛でスイッチが入る一品。',ing:['ご飯','キムチ','ごま油','海苔'],moods:['mood_challenge','mood_genki'],flavors:['flavor_karai'],nutrition:['nutri_vitamin']},
+  {id:15,name:'天むす',point:'小エビ天のサクサク感を包んだ贅沢系。',ing:['ご飯','小エビ天','天つゆ少々','海苔'],moods:['mood_gatsuri'],flavors:['flavor_kotteri','flavor_shoppai'],nutrition:['nutri_protein']},
+  {id:16,name:'唐揚げおにぎり',point:'ジューシーな唐揚げでお腹も心も満たす。',ing:['ご飯','鶏唐揚げ','マヨネーズ少々','海苔'],moods:['mood_gatsuri'],flavors:['flavor_kotteri','flavor_shoppai'],nutrition:['nutri_protein']},
+  {id:17,name:'ひじき煮おにぎり',point:'常備菜をそのまま活用できる滋味深い味。',ing:['ご飯','ひじきの煮物','ごま'],moods:['mood_hokkori'],flavors:['flavor_shoppai'],nutrition:['nutri_mineral','nutri_fiber']},
+  {id:18,name:'しゃけマヨおにぎり',point:'鮭とマヨの黄金コンビで飽きのこない味。',ing:['ご飯','鮭フレーク','マヨネーズ','海苔'],moods:['mood_gatsuri'],flavors:['flavor_kotteri'],nutrition:['nutri_protein']},
+  {id:19,name:'梅しそおにぎり',point:'大葉の香りが加わり、より爽やかな酸味に。',ing:['ご飯','梅干し','大葉','海苔'],moods:['mood_sappari'],flavors:['flavor_sanmi','flavor_sappari'],nutrition:['nutri_vitamin']},
+  {id:20,name:'カリカリ梅とごまおにぎり',point:'コリコリした食感が楽しい酸味系おやつ感覚。',ing:['ご飯','カリカリ梅','白ごま','海苔'],moods:['mood_sappari'],flavors:['flavor_sanmi'],nutrition:['nutri_mineral']},
+  {id:21,name:'味噌焼きおにぎり',point:'甘辛い味噌だれが香ばしく焼き上がる。',ing:['ご飯','味噌','みりん少々'],moods:['mood_hokkori'],flavors:['flavor_shoppai','flavor_kotteri'],nutrition:['nutri_carb']},
+  {id:22,name:'ねぎ味噌おにぎり',point:'ねぎの香りと味噌の風味で元気が出る一品。',ing:['ご飯','味噌','小ねぎ','ごま油少々'],moods:['mood_genki'],flavors:['flavor_shoppai'],nutrition:['nutri_vitamin']},
+  {id:23,name:'チャーハン風おにぎり',point:'卵と焼き豚でパラッと仕上げるがっつり系。',ing:['ご飯','卵','焼き豚','ねぎ','醤油'],moods:['mood_gatsuri'],flavors:['flavor_kotteri','flavor_shoppai'],nutrition:['nutri_carb']},
+  {id:24,name:'もち麦入り塩おにぎり',point:'プチプチ食感とほのかな甘みで軽やかに。',ing:['ご飯+もち麦','塩'],moods:['mood_sappari'],flavors:['flavor_sappari','flavor_shoppai'],nutrition:['nutri_fiber','nutri_lowcal']},
+  {id:25,name:'雑穀米梅おにぎり',point:'雑穀の香ばしさと梅の酸味で軽い食後感。',ing:['雑穀米','梅干し','海苔'],moods:['mood_sappari'],flavors:['flavor_sanmi'],nutrition:['nutri_fiber']},
+  {id:26,name:'アボカド醤油おにぎり',point:'まるでマグロのようなコクをアボカドで。',ing:['ご飯','アボカド','醤油','わさび少々'],moods:['mood_iyashi'],flavors:['flavor_kotteri'],nutrition:['nutri_vitamin']},
+  {id:27,name:'ツナ味噌おにぎり',point:'ツナの旨味に味噌のコクを重ねた変化球。',ing:['ご飯','ツナ','味噌','ごま油'],moods:['mood_gatsuri'],flavors:['flavor_kotteri','flavor_shoppai'],nutrition:['nutri_protein']},
+  {id:28,name:'生姜おかかおにぎり',point:'甘酢生姜のさっぱり感でおかかが引き立つ。',ing:['ご飯','おかか','生姜の甘酢漬け','醤油'],moods:['mood_genki'],flavors:['flavor_shoppai'],nutrition:['nutri_vitamin']},
+  {id:29,name:'しらすと大葉おにぎり',point:'しらすの塩気と大葉の香りが夏らしい一品。',ing:['ご飯','しらす','大葉','ごま'],moods:['mood_sappari'],flavors:['flavor_sappari','flavor_shoppai'],nutrition:['nutri_protein','nutri_mineral']},
+  {id:30,name:'焼き鮭マヨおにぎり',point:'香ばしく焼いた鮭とマヨでボリューム満点。',ing:['ご飯','焼き鮭','マヨネーズ','海苔'],moods:['mood_gatsuri'],flavors:['flavor_kotteri','flavor_shoppai'],nutrition:['nutri_protein']},
+
+  {id:101,name:'プロテイン鮭むすび',point:'筋トレ勢の相棒。炊きたてご飯にプロテインパウダーを少量混ぜ込みタンパク質を底上げ。',ing:['ご飯','焼き鮭フレーク','プロテインパウダー(無糖)','海苔'],moods:['mood_genki','mood_challenge'],flavors:['flavor_shoppai'],nutrition:['nutri_protein'],funny:true,geteLevel:1,caution:'パウダーは商品の摂取量を守り、小さじ1程度から試してください。'},
+  {id:102,name:'青汁まぜまぜ梅むすび',point:'ご飯が鮮やかなグリーンに染まる見た目インパクト重視系。青汁の苦味と梅の酸味が主張し合う。',ing:['ご飯','青汁パウダー','梅干し','白ごま'],moods:['mood_iyashi','mood_challenge'],flavors:['flavor_sanmi'],nutrition:['nutri_vitamin','nutri_fiber'],funny:true,geteLevel:3,caution:'苦味が強いので、はちみつ少量でまとめるのがおすすめです。'},
+  {id:103,name:'コオロギパウダー唐揚げおにぎり',point:'話題の昆虫食に挑戦したい人向け。唐揚げの衣にコオロギパウダーを少量まぶすとナッツのような香ばしさが加わる。',ing:['ご飯','鶏唐揚げ','食用コオロギパウダー','海苔'],moods:['mood_challenge'],flavors:['flavor_kotteri','flavor_shoppai'],nutrition:['nutri_protein'],funny:true,geteLevel:5,caution:'甲殻類アレルギーがある方は避けてください。'},
+  {id:104,name:'MCTオイルとツナのケトむすび',point:'糖質を抑えたい日の一手。ツナマヨにMCTオイルを少量加えてエネルギー補給。',ing:['ご飯少量','ツナ','MCTオイル','海苔'],moods:['mood_challenge','mood_genki'],flavors:['flavor_kotteri'],nutrition:['nutri_protein'],funny:true,geteLevel:2,caution:'オイルは少量から。摂りすぎるとお腹がゆるくなることがあります。'},
+  {id:105,name:'納豆チョコおにぎり',point:'甘いものとしょっぱいものを同時に食べたい欲張りな日用。ネバネバとカカオの意外な組み合わせ。',ing:['ご飯','納豆','チョコレート(刻み)','海苔'],moods:['mood_challenge'],flavors:['flavor_amai','flavor_shoppai'],nutrition:['nutri_protein'],funny:true,geteLevel:4,caution:'まずは小さめの一口サイズで試すのがおすすめです。'},
+  {id:106,name:'パクチー激辛おにぎり',point:'パクチー好きのための刺激強め系。ナンプラーでエスニックな塩気を加えた辛旨味。',ing:['ご飯','パクチー','唐辛子','ナンプラー少々'],moods:['mood_challenge'],flavors:['flavor_karai'],nutrition:['nutri_vitamin'],funny:true,geteLevel:3,caution:'辛さは唐辛子の量で調整してください。'},
+  {id:107,name:'ドリアンおかかむすび',point:'世界一クセの強い果物とおかかの珍味コンビ。香りと旨味が意外なマリアージュという説がある一皿。',ing:['ご飯','ドリアン(冷凍果肉)','おかか','醤油少々'],moods:['mood_challenge'],flavors:['flavor_amai','flavor_kotteri'],nutrition:['nutri_vitamin'],funny:true,geteLevel:5,caution:'香りが強いので、食べる場所と換気にご配慮ください。'},
+  {id:108,name:'コラーゲンぷるぷる梅おにぎり',point:'美容意識が高い日のお守りおにぎり。無味タイプのコラーゲンパウダーを混ぜ込むだけ。',ing:['ご飯','梅干し','コラーゲンパウダー(無味)','海苔'],moods:['mood_iyashi'],flavors:['flavor_sanmi'],nutrition:['nutri_protein'],funny:true,geteLevel:1,caution:'商品の摂取上限量を確認してから加えてください。'},
+  {id:109,name:'マルチビタミングミのせツナおにぎり',point:'見た目のインパクト優先のネタ系。おにぎりの上にビタミングミをちょこんと乗せるだけ。',ing:['ご飯','ツナマヨ','マルチビタミングミ','海苔'],moods:['mood_challenge'],flavors:['flavor_kotteri','flavor_amai'],nutrition:['nutri_vitamin'],funny:true,geteLevel:3,caution:'グミは1日の摂取目安量を超えないようご注意ください。'},
+  {id:110,name:'激辛はちみつチーズおにぎり',point:'デザートとおかずの境界線をぶち壊す一品。ピリ辛×甘い×濃厚が同時にやってくる。',ing:['ご飯','クリームチーズ','はちみつ','唐辛子'],moods:['mood_challenge'],flavors:['flavor_karai','flavor_amai','flavor_kotteri'],nutrition:['nutri_protein'],funny:true,geteLevel:4,caution:'辛味と甘味、量のバランスはお好みで調整してください。'},
+];
+
+const state = {mood:null, flavor:null, nutrition:null, includeFunny:true, featuredId:null, revealed:false};
+
+function chipHtml(item, cls, groupKey){
+  return `<button type="button" class="chip ${cls}" data-group="${groupKey}" data-key="${item.key}" aria-pressed="false">
+    <span class="tri">▲</span>${item.label}
+  </button>`;
+}
+document.getElementById('moodChips').innerHTML = MOODS.map(m=>chipHtml(m,'mood','mood')).join('');
+document.getElementById('flavorChips').innerHTML = FLAVORS.map(m=>chipHtml(m,'flavor','flavor')).join('');
+document.getElementById('nutriChips').innerHTML = NUTRITION.map(m=>chipHtml(m,'nutri','nutrition')).join('');
+
+document.querySelectorAll('.chip').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const group = btn.dataset.group;
+    const key = btn.dataset.key;
+    const cur = state[group];
+    state[group] = (cur === key) ? null : key;
+    document.querySelectorAll(`.chip[data-group="${group}"]`).forEach(b=>{
+      b.setAttribute('aria-pressed', String(b.dataset.key === state[group]));
+    });
+    if(state.revealed) renderResults();
+  });
+});
+
+const funnyToggle = document.getElementById('funnyToggle');
+const funnyState = document.getElementById('funnyState');
+funnyToggle.addEventListener('change', ()=>{
+  state.includeFunny = funnyToggle.checked;
+  funnyState.textContent = state.includeFunny ? '含める' : '含めない';
+  if(state.revealed) renderResults();
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  state.mood = null; state.flavor = null; state.nutrition = null;
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));
+  state.includeFunny = true; funnyToggle.checked = true; funnyState.textContent = '含める';
+  state.revealed = false; state.featuredId = null;
+  document.getElementById('results').innerHTML = '';
+});
+
+document.getElementById('ctaBtn').addEventListener('click', ()=>{
+  state.revealed = true;
+  state.featuredId = null;
+  renderResults();
+  document.getElementById('results').scrollIntoView({behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+});
+
+function scoreOf(r){
+  let s = 0;
+  if(state.mood && r.moods.includes(state.mood)) s++;
+  if(state.flavor && r.flavors.includes(state.flavor)) s++;
+  if(state.nutrition && r.nutrition.includes(state.nutrition)) s++;
+  return s;
+}
+function selectedCount(){
+  return [state.mood, state.flavor, state.nutrition].filter(Boolean).length;
+}
+function tagBadges(r){
+  const parts = [];
+  r.moods.forEach(k=>parts.push(`<span class="tag mood">${LABELMAP[k]}</span>`));
+  r.flavors.forEach(k=>parts.push(`<span class="tag flavor">${LABELMAP[k]}</span>`));
+  r.nutrition.forEach(k=>parts.push(`<span class="tag nutri">${LABELMAP[k]}</span>`));
+  return parts.join('');
+}
+function triRow(score, max, cls){
+  let out = '';
+  for(let i=1;i<=max;i++){
+    out += `<span class="tri ${i<=score?'on':''}">▲</span>`;
+  }
+  return out;
+}
+
+function renderResults(){
+  const container = document.getElementById('results');
+  const pool = RECIPES.filter(r => state.includeFunny || !r.funny);
+  const sel = selectedCount();
+
+  let list = pool.map(r => ({...r, score: sel ? scoreOf(r) : 0}));
+  let fallback = false;
+  if(sel > 0){
+    const matched = list.filter(r => r.score > 0);
+    if(matched.length){
+      list = matched.sort((a,b)=> b.score - a.score);
+    } else {
+      fallback = true;
+      list = list.sort((a,b)=> a.id - b.id);
+    }
+  } else {
+    list = list.sort((a,b)=> a.id - b.id);
+  }
+
+  if(!list.length){
+    container.innerHTML = `<p class="result-msg">条件に合うレシピが見つかりませんでした。面白レシピを含めるか、条件を変えてみてください。</p>`;
+    return;
+  }
+
+  // pick featured
+  let featured;
+  if(state.featuredId){
+    featured = list.find(r => r.id === state.featuredId) || list[0];
+  } else {
+    const topScore = list[0].score;
+    const topGroup = list.filter(r => r.score === topScore);
+    featured = topGroup[Math.floor(Math.random() * topGroup.length)];
+    state.featuredId = featured.id;
+  }
+  const others = list.filter(r => r.id !== featured.id);
+
+  let msg;
+  if(sel === 0){
+    msg = `気分・味・栄養を選ぶとおすすめが絞れます。今は<strong>${list.length}件</strong>から選んでいます。`;
+  } else if(fallback){
+    msg = `ぴったり一致するレシピは見つかりませんでした。近いおすすめ<strong>${list.length}件</strong>を表示しています。`;
+  } else {
+    msg = `条件に合うおにぎりが<strong>${list.length}件</strong>見つかりました。`;
+  }
+
+  const isFunny = !!featured.funny;
+  const stampHtml = isFunny ? `<div class="stamp">実験的<br>レシピ</div>` : '';
+  const geteHtml = isFunny ? `<div class="gete-level">ゲテモノ度 ${triRow(featured.geteLevel,5)}</div>` : '';
+  const cautionHtml = isFunny ? `<div class="caution">${featured.caution}</div>` : '';
+  const matchHtml = sel > 0
+    ? `<div class="match">マッチ度 ${triRow(featured.score, sel)} <span>(${featured.score}/${sel})</span></div>`
+    : '';
+
+  container.innerHTML = `
+    <p class="result-msg">${msg}</p>
+    <div class="featured ${isFunny?'is-funny':''}">
+      <div class="ribbon"><span class="tri-icon">▲</span></div>
+      ${stampHtml}
+      <div class="eyebrow">${isFunny ? '本日の面白おにぎり' : '本日のおすすめ'}</div>
+      <h2 class="f-name">${featured.name}</h2>
+      <p class="f-point">${featured.point}</p>
+      ${matchHtml}
+      ${geteHtml}
+      <div class="tag-row">${tagBadges(featured)}</div>
+      <div class="ing-block">
+        <h4>材料</h4>
+        <ul class="ing-list">${featured.ing.map(i=>`<li>${i}</li>`).join('')}</ul>
+      </div>
+      ${cautionHtml}
+    </div>
+    ${others.length ? `<p class="grid-label">他の候補（クリックで切り替え）</p>
+    <div class="grid">
+      ${others.map(r => `
+        <button type="button" class="cand ${r.funny?'is-funny':''}" data-id="${r.id}">
+          <span class="corner"></span>
+          <div class="cand-name">${r.name}</div>
+          <p class="cand-point">${r.point}</p>
+          <div class="cand-tags">${tagBadges(r)}</div>
+        </button>
+      `).join('')}
+    </div>` : ''}
+  `;
+
+  container.querySelectorAll('.cand').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.featuredId = Number(btn.dataset.id);
+      renderResults();
+      container.scrollIntoView({behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+    });
+  });
+}
+</script>
+</body>
+</html>
