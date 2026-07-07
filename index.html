@@ -1280,21 +1280,45 @@ function score(r){
   return s;
 }
 
-function pickRecipes(){
-  const pool = RECIPES.filter(r=> state.joke || !r.joke)
-    .map(r=>({r, s: score(r) + Math.random()*0.9})) // 同点はランダムで揺らす
-    .sort((a,b)=> b.s - a.s);
+function candidates(list, minPool = 6){
+  const scored = list.map(r=>({r, s: score(r)}));
+  const max = Math.max(...scored.map(c=>c.s));
+  // 最高点から-3点までを抽選候補にする(条件未選択などで最高点が0なら全員候補)
+  let floor = max > 0 ? Math.max(max - 3, 1) : 0;
+  let band = scored.filter(c=> c.s >= floor);
+  // 候補が少なすぎる場合は帯を広げて、引き直しの多様性を確保する
+  while (band.length < minPool && floor > 0){
+    floor--;
+    band = scored.filter(c=> c.s >= floor);
+  }
+  return band.map(c=>({r: c.r, s: c.s, w: Math.pow(1.7, c.s)}));
+}
 
-  const picks = [];
-  // まじめ枠から上位2つ
-  for (const p of pool){ if (!p.r.joke && picks.length < 2) picks.push(p.r); }
-  // 面白ONなら最上位の面白レシピを必ず1枠混入
+// スコアの重みに応じて、重複なしでk件抽選する
+function weightedSample(cands, k){
+  const pool = cands.slice();
+  const picked = [];
+  while (picked.length < k && pool.length){
+    const total = pool.reduce((sum,c)=> sum + c.w, 0);
+    let roll = Math.random() * total;
+    let idx = pool.length - 1;
+    for (let i = 0; i < pool.length; i++){
+      roll -= pool[i].w;
+      if (roll <= 0){ idx = i; break; }
+    }
+    picked.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+  return picked;
+}
+
+function pickRecipes(){
+  const seriousPicks = weightedSample(candidates(RECIPES.filter(r=>!r.joke)), state.joke ? 2 : 3);
+  seriousPicks.sort((a,b)=> b.s - a.s); // 「本日の処方」タグは高スコア側に
+  const picks = seriousPicks.map(c=>c.r);
   if (state.joke){
-    const j = pool.find(p=> p.r.joke);
-    if (j) picks.push(j.r);
-  } else {
-    const third = pool.find(p=> !picks.includes(p.r) && !p.r.joke);
-    if (third) picks.push(third.r);
+    const j = weightedSample(candidates(RECIPES.filter(r=>r.joke)), 1);
+    if (j.length) picks.push(j[0].r);
   }
   return picks;
 }
