@@ -183,7 +183,7 @@
 <div class="wrap">
   <header>
     <div class="kanban"><span class="oni">🍙</span><h1>おにぎり処方箋</h1></div>
-    <p>今日の気分を教えてください。ぴったりの一品をおにぎり薬局が調合します。</p>
+    <p>今日の気分を教えてください。ぴったりの一品をおにぎり薬局が調合します。<br>何も選ばずに「にぎる」と、おまかせ処方になります。</p>
   </header>
 
   <section class="card">
@@ -1334,7 +1334,7 @@ function oniSvg(color, joke){
     <path d="M60 12 C68 12 72 18 80 30 L102 66 C108 76 104 88 92 90 C72 94 48 94 28 90 C16 88 12 76 18 66 L40 30 C48 18 52 12 60 12 Z"
       fill="#FDFBF4" stroke="#262D22" stroke-width="4"/>
     <ellipse cx="60" cy="42" rx="13" ry="9" fill="${color}"/>
-    <rect x="42" y="86" width="36" height="22" rx="4" fill="#262D22"/>
+    <rect x="42" y="82" width="36" height="16" rx="4" fill="#262D22"/>
     ${face}
     ${joke ? `<text x="96" y="30" font-size="18">💦</text>` : `<text x="94" y="28" font-size="16">✨</text>`}
   </svg>`;
@@ -1362,7 +1362,7 @@ function buildShareText(recipe){
     return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私に処方されたのは…\n" : ""}${recipe.joke ? "⚠攻めレシピ " : ""}「${recipe.name}」\n${recipe.desc}\n#おにぎり処方箋\n${APP_URL}`;
   }
   const lines = currentPicks.map((r,i)=> `${["①","②","③"][i]||"・"}${r.joke?"⚠":""}${r.name}`).join("\n");
-  return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私への処方は…\n" : "本日の処方は…\n"}${lines}\n#おにぎり処方箋\n${APP_URL}`;
+  return `🍙おにぎり処方箋🍙\n${cond ? cond + " の私への処方は…\n" : "おまかせで処方されたのは…\n"}${lines}\n#おにぎり処方箋\n${APP_URL}`;
 }
 
 function showToast(msg){
@@ -1421,7 +1421,8 @@ function render(picks){
       </div>
     </article>`;
   }).join("");
-  box.innerHTML = `<div class="result-head"><h2>本日の処方箋</h2></div>${cards}
+  const isOmakase = !conditionText();
+  box.innerHTML = `<div class="result-head"><h2>${isOmakase ? "本日のおまかせ処方箋" : "本日の処方箋"}</h2></div>${cards}
     <button class="again" id="again">🎲 もう一回にぎる</button>
     <div class="share-bar">
       <button class="share-btn" id="share-all">📤 処方箋まるごとシェア</button>
@@ -1440,10 +1441,7 @@ function render(picks){
 }
 
 document.getElementById("go").onclick = ()=>{
-  if (!state.mood && !state.taste && !state.nutri){
-    alert("どれかひとつでいいので、気分・味・栄養を選んでください🍙");
-    return;
-  }
+  // 何も選ばれていなければ「おまかせ」として全レシピから抽選する
   render(pickRecipes());
 };
 </script>
